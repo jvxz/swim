@@ -44,6 +44,7 @@
     "@tauri-store/pinia": "^4.2.0",
     "@tauri-store/vue": "^2.2.0",
     "@unocss/nuxt": "^66.6.6",
+    "@unocss/reset": "^66.7.5",
     "@vueuse/components": "^14.2.1",
     "@vueuse/integrations": "^14.2.1",
     "better-sqlite3": "^12.6.2",
@@ -75,6 +76,7 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
+    "@nuxt/schema": "^4.5.1",
     "@nuxt/test-utils": "^4.0.0",
     "@tauri-apps/cli": "^2.10.1",
     "@types/node": "^25.5.0",
