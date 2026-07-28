@@ -3,30 +3,41 @@ import type { AcceptableValue } from 'reka-ui'
 
 const open = ref(false)
 const input = ref('')
-const listBoxHighlightedItem = ref<{ ref: HTMLElement, value: AcceptableValue } | undefined>()
+const listBoxHighlightedItem = ref<{ ref: HTMLElement; value: AcceptableValue } | undefined>()
 const commandRootValue = ref<AcceptableValue | AcceptableValue[] | undefined>()
 
 const { store } = useTauri()
 
-onKeyStrokeSafe('meta_p', () => {
-  open.value = !open.value
-}, {
-  ignore: ['[data-slot="command-input"]', '#track-list-search-input'],
-})
+onKeyStrokeSafe(
+  'meta_p',
+  () => {
+    open.value = !open.value
+  },
+  {
+    ignore: ['[data-slot="command-input"]', '#track-list-search-input'],
+  },
+)
 
 watch(open, () => {
   // ensure active element is blurred when dialog is closed
   if (!open.value) {
     const activeElement = document.activeElement as HTMLElement
 
-    if (activeElement && activeElement !== document.body)
-      activeElement.blur()
+    if (activeElement && activeElement !== document.body) activeElement.blur()
   }
 })
 
-const { execute: reloadRecents, isReady: isRecentsReady, state: recents } = useAsyncState(async () => store.get<string[]>('modal-folder-select-recents'), [])
+const {
+  execute: reloadRecents,
+  isReady: isRecentsReady,
+  state: recents,
+} = useAsyncState(async () => store.get<string[]>('modal-folder-select-recents'), [])
 
-const { execute: checkPathExists, state: pathExists } = useAsyncState(() => useTauriFsExists(input.value), false, { immediate: false })
+const { execute: checkPathExists, state: pathExists } = useAsyncState(
+  () => useTauriFsExists(input.value),
+  false,
+  { immediate: false },
+)
 
 const inputType = computed(() => getInputType(input.value))
 watch(input, () => input.value && inputType.value !== 'query' && checkPathExists())
@@ -40,13 +51,15 @@ async function handleEnter(manualInput?: string) {
 
     const newRecents = recents.value ?? []
 
-    if (!isRecentsReady.value || recents.value?.some(i => i.toLowerCase() === inputToUse.toLowerCase())) {
+    if (
+      !isRecentsReady.value ||
+      recents.value?.some((i) => i.toLowerCase() === inputToUse.toLowerCase())
+    ) {
       const index = newRecents.indexOf(inputToUse)
       newRecents.splice(index, 1)
     }
 
-    if (newRecents.length >= 6)
-      newRecents.pop()
+    if (newRecents.length >= 6) newRecents.pop()
 
     newRecents.unshift(inputToUse)
 
@@ -65,8 +78,7 @@ async function handleEnter(manualInput?: string) {
 }
 
 function getInputType(path: string) {
-  if (!path.includes('/') && !path.includes('\\'))
-    return 'query'
+  if (!path.includes('/') && !path.includes('\\')) return 'query'
 
   const fileIdx = path.lastIndexOf('.')
   const folderIdx = path.lastIndexOf('/')
@@ -80,13 +92,15 @@ function handleKeyDownRight() {
 
 function handleCmdItemMount(item: VNode) {
   const cmdItemId: string | undefined = item.el?.id
-  if (cmdItemId)
-    commandRootValue.value = cmdItemId
+  if (cmdItemId) commandRootValue.value = cmdItemId
 }
 </script>
 
 <template>
-  <UCommandDialog :open="open" @update:open="open = $event">
+  <UCommandDialog
+    :open="open"
+    @update:open="open = $event"
+  >
     <UCommandRoot
       v-model:model-value="commandRootValue"
       class="size-full relative"
@@ -143,7 +157,10 @@ function handleCmdItemMount(item: VNode) {
             </UCommandItem>
           </UCommandGroup>
         </template>
-        <UCommandGroup v-if="recents?.length" heading="Recents">
+        <UCommandGroup
+          v-if="recents?.length"
+          heading="Recents"
+        >
           <UCommandItem
             v-for="recentItem in recents"
             :key="recentItem"

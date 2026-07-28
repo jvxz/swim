@@ -3,10 +3,13 @@ definePageMeta({
   layout: 'main',
   middleware: async (to) => {
     const id = 'id' in to.params ? Number(to.params.id) : 0
-    const playlistExists = await $db().selectFrom('playlists').where('id', '=', id).selectAll().executeTakeFirst()
+    const playlistExists = await $db()
+      .selectFrom('playlists')
+      .where('id', '=', id)
+      .selectAll()
+      .executeTakeFirst()
 
-    if (id === 0 || !playlistExists)
-      return abortNavigation()
+    if (id === 0 || !playlistExists) return abortNavigation()
   },
 })
 
@@ -25,7 +28,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-if="id" class="flex-1">
+  <div
+    v-if="id"
+    class="flex-1"
+  >
     <LayoutTrackList
       v-bind="trackListInput"
       type="playlist"

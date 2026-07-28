@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ComboboxContentEmits, ComboboxContentProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
 import { AutocompleteContent, AutocompletePortal, useForwardPropsEmits } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
 
 defineOptions({
   inheritAttrs: false,
@@ -25,7 +25,13 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     <AutocompleteContent
       data-slot="autocomplete-content"
       v-bind="{ ...$attrs, ...forwarded }"
-      :class="cn(popoverStyles.content, 'z-10 w-(--reka-combobox-trigger-width) overflow-hidden will-change-[opacity,transform]', props.class)"
+      :class="
+        cn(
+          popoverStyles.content,
+          'z-10 w-(--reka-combobox-trigger-width) overflow-hidden will-change-[opacity,transform]',
+          props.class,
+        )
+      "
     >
       <slot />
     </AutocompleteContent>

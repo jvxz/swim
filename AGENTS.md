@@ -11,6 +11,7 @@ This document gives AI agents context about the project so they can work effecti
 **Swim** is a desktop music player for archivists. It manages local music libraries, playlists, and playback with a focus on metadata, scrobbling, and long-term library management.
 
 **Core features:**
+
 - Playback (play, pause, seek, volume, loop)
 - Library (add folders, scan tracks, browse)
 - Playlists (create, rename, delete, add/remove/reorder tracks)
@@ -41,13 +42,14 @@ Native-feel is desired. Prefer native or platform-appropriate solutions when fea
 
 The webview setup differs per OS. Be aware of this when debugging, testing, or adding features that depend on the webview.
 
-| Platform | Engine | Notes |
-|----------|--------|-------|
-| **macOS** | WKWebView (WebKit) | Preinstalled, version tied to macOS. Safari-like rendering. `dataStoreIdentifier` on 14.0+. Theme support from 10.14+. Transparent windows need `macos-private-api` (blocks App Store). |
-| **Windows** | WebView2 (Chromium/Edge) | Auto-updates independently. Preinstalled on Windows 11. Edge DevTools. Scrollbar styles and extensions are Windows-specific. |
-| **Linux** | WebKitGTK | Version depends on distro. Requires system deps (e.g. `libwebkit2gtk-4.1-dev`). Limited scrollbar customization, app-wide theme. |
+| Platform    | Engine                   | Notes                                                                                                                                                                                   |
+| ----------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **macOS**   | WKWebView (WebKit)       | Preinstalled, version tied to macOS. Safari-like rendering. `dataStoreIdentifier` on 14.0+. Theme support from 10.14+. Transparent windows need `macos-private-api` (blocks App Store). |
+| **Windows** | WebView2 (Chromium/Edge) | Auto-updates independently. Preinstalled on Windows 11. Edge DevTools. Scrollbar styles and extensions are Windows-specific.                                                            |
+| **Linux**   | WebKitGTK                | Version depends on distro. Requires system deps (e.g. `libwebkit2gtk-4.1-dev`). Limited scrollbar customization, app-wide theme.                                                        |
 
 **Implications:**
+
 - Test on target platforms early; WebKit/Chromium versions differ.
 - Use feature detection instead of assuming cross-platform parity.
 - DevTools differ: Safari Inspector (macOS), Edge DevTools (Windows), WebKitGTK WebInspector (Linux).
@@ -61,10 +63,9 @@ The webview setup differs per OS. Be aware of this when debugging, testing, or a
 - **Pinia** for shared state (e.g. track data cache).
 - **Rust** in `src-tauri/src/`: `audio.rs`, `playback.rs`, `read.rs`, `id3.rs`, `lastfm.rs`, `waveform.rs`, `stronghold.rs`.
 - **Tauri APIs** are auto-imported with `useTauri` prefix; check `import.meta.env.TAURI_PLATFORM` before use.
-- See `.cursorrules` for conventions (Nuxt, Vue, UnoCSS, Reka UI, etc.).
-
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:7510c1e2 -->
+
 ## Beads Issue Tracker
 
 This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
@@ -106,8 +107,10 @@ bd close <id>         # Complete work
 7. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
+
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
+
 <!-- END BEADS INTEGRATION -->

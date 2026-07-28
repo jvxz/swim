@@ -35,7 +35,10 @@ function copyValue(value: string) {
     :disabled="copied"
     @click="copyValue(toValue(props.value) ?? '')"
   >
-    <AnimatePresence :initial="false" mode="sync">
+    <AnimatePresence
+      :initial="false"
+      mode="sync"
+    >
       <motion.div
         v-if="copied"
         :initial="initial"
@@ -57,7 +60,10 @@ function copyValue(value: string) {
         :transition="transition"
         class="h-5 absolute"
       >
-        <Icon name="tabler:copy" class="size-4!" />
+        <Icon
+          name="tabler:copy"
+          class="size-4!"
+        />
       </motion.div>
     </AnimatePresence>
   </UButton>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ComboboxContentEmits, ComboboxContentProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
 import { ComboboxContent, useForwardPropsEmits } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
 
 defineOptions({
   inheritAttrs: false,
@@ -23,7 +23,13 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
   <ComboboxContent
     data-slot="combobox-list"
     v-bind="{ ...$attrs, ...forwarded }"
-    :class="cn(popoverStyles.content, 'absolute top-(--reka-combobox-trigger-height) mt-1 w-full overflow-hidden', props.class)"
+    :class="
+      cn(
+        popoverStyles.content,
+        'absolute top-(--reka-combobox-trigger-height) mt-1 w-full overflow-hidden',
+        props.class,
+      )
+    "
   >
     <slot />
   </ComboboxContent>

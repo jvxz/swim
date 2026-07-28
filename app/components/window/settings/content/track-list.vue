@@ -7,12 +7,13 @@ const rowStyle = settings.layout.element.trackList.rowStyle
 <template>
   <WindowSettingsContentLayout title="Track list">
     <div class="flex flex-col gap-2">
-      <ULabel>
-        Row style
-      </ULabel>
+      <ULabel> Row style </ULabel>
       <UDropdownMenuRoot>
         <UDropdownMenuTrigger as-child>
-          <UButton variant="soft" class="w-64 justify-between">
+          <UButton
+            variant="soft"
+            class="w-64 justify-between"
+          >
             {{ upperFirst(rowStyle) }}
             <Icon name="tabler:chevron-down" />
           </UButton>
@@ -22,12 +23,8 @@ const rowStyle = settings.layout.element.trackList.rowStyle
             <UDropdownMenuRadioItem value="alternating-background">
               Alternating background
             </UDropdownMenuRadioItem>
-            <UDropdownMenuRadioItem value="bordered">
-              Bordered
-            </UDropdownMenuRadioItem>
-            <UDropdownMenuRadioItem value="none">
-              None
-            </UDropdownMenuRadioItem>
+            <UDropdownMenuRadioItem value="bordered"> Bordered </UDropdownMenuRadioItem>
+            <UDropdownMenuRadioItem value="none"> None </UDropdownMenuRadioItem>
           </UDropdownMenuRadioGroup>
         </UDropdownMenuContent>
       </UDropdownMenuRoot>

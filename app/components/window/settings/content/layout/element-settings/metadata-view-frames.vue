@@ -12,48 +12,58 @@ const { contains } = useFilter({ sensitivity: 'base' })
 const fields = computed(() => settings.layout.element.metadataView.frames)
 
 const activeListEl = useTemplateRef<HTMLDivElement>('activeListEl')
-const { barStyles: activeListBarStyles, draggingItem: draggingActiveItem, getDragElementProps: activeDragElementProps } = useDraggable(
-  fields,
-  activeListEl,
-  {
-    class: {
-      dragging: 'opacity-50',
-    },
-    direction: 'vertical',
-    doDragGhost: true,
-    group: 'metadata-view-frames',
-    onDragEnd: (params) => {
-      settings.layout.element.metadataView.frames = handleListRearrange(settings.layout.element.metadataView.frames, params)
-      isDragging.value = false
-    },
-    onDragStart: () => isDragging.value = true,
+const {
+  barStyles: activeListBarStyles,
+  draggingItem: draggingActiveItem,
+  getDragElementProps: activeDragElementProps,
+} = useDraggable(fields, activeListEl, {
+  class: {
+    dragging: 'opacity-50',
   },
-)
-
-const availableListEl = useTemplateRef<HTMLDivElement>('availableListEl')
-const { getDragElementProps: availableDragElementProps } = useDraggable(toRef(objectKeys(ID3_MAP)), availableListEl, {
   direction: 'vertical',
   doDragGhost: true,
   group: 'metadata-view-frames',
   onDragEnd: (params) => {
-    if (params.targetItem?._listId === params.prevItem._listId)
-      return
-
-    settings.layout.element.metadataView.frames = settings.layout.element.metadataView.frames.filter(f => f !== params.prevItem.data)
+    settings.layout.element.metadataView.frames = handleListRearrange(
+      settings.layout.element.metadataView.frames,
+      params,
+    )
     isDragging.value = false
   },
-  onDragStart: () => isDragging.value = true,
+  onDragStart: () => (isDragging.value = true),
 })
 
-function handleRemoveField(field: Id3FrameId | null) {
-  if (!field)
-    return
+const availableListEl = useTemplateRef<HTMLDivElement>('availableListEl')
+const { getDragElementProps: availableDragElementProps } = useDraggable(
+  toRef(objectKeys(ID3_MAP)),
+  availableListEl,
+  {
+    direction: 'vertical',
+    doDragGhost: true,
+    group: 'metadata-view-frames',
+    onDragEnd: (params) => {
+      if (params.targetItem?._listId === params.prevItem._listId) return
 
-  settings.layout.element.metadataView.frames = settings.layout.element.metadataView.frames.filter(f => f !== field)
+      settings.layout.element.metadataView.frames =
+        settings.layout.element.metadataView.frames.filter((f) => f !== params.prevItem.data)
+      isDragging.value = false
+    },
+    onDragStart: () => (isDragging.value = true),
+  },
+)
+
+function handleRemoveField(field: Id3FrameId | null) {
+  if (!field) return
+
+  settings.layout.element.metadataView.frames = settings.layout.element.metadataView.frames.filter(
+    (f) => f !== field,
+  )
 }
 
 const { isOutside: isOutsideAvailableList } = useMouseInElement(availableListEl)
-const showDeleteOverlay = computed(() => !!draggingActiveItem.value && !isOutsideAvailableList.value)
+const showDeleteOverlay = computed(
+  () => !!draggingActiveItem.value && !isOutsideAvailableList.value,
+)
 </script>
 
 <template>
@@ -66,34 +76,40 @@ const showDeleteOverlay = computed(() => !!draggingActiveItem.value && !isOutsid
         placeholder="Search available frames..."
         class="shrink-0"
       />
-      <UDraggableList ref="availableListEl" class="rounded-sm flex flex-col gap-1 size-full relative overflow-y-auto">
+      <UDraggableList
+        ref="availableListEl"
+        class="rounded-sm flex flex-col gap-1 size-full relative overflow-y-auto"
+      >
         <div
           v-for="frame in objectKeys(ID3_MAP)"
           v-show="contains(`${frame} ${ID3_MAP[frame]}`, availableListQuery)"
           :key="frame"
           class="flex shrink-0 w-full active:text-foreground"
           :class="{
-            'pointer-events-none': fields.some(f => f === frame),
+            'pointer-events-none': fields.some((f) => f === frame),
             'opacity-50': showDeleteOverlay,
           }"
           v-bind="availableDragElementProps(frame)"
         >
           <UDraggableItem
-            :disabled="fields.some(f => f === frame)"
+            :disabled="fields.some((f) => f === frame)"
             :item="frame"
             class="rounded-none flex-1"
             @pointerdown.right="selectedField = frame"
-            @click="() => {
-              if (!isDragging) settings.layout.element.metadataView.frames = [...fields, frame]
-            }"
+            @click="
+              () => {
+                if (!isDragging) settings.layout.element.metadataView.frames = [...fields, frame]
+              }
+            "
           >
             <span class="truncate">{{ ID3_MAP[frame] }}</span>
           </UDraggableItem>
         </div>
-        <div v-if="showDeleteOverlay" class="grid size-full pointer-events-none inset-0 place-items-center absolute">
-          <p class="text-lg font-medium">
-            Drop to delete
-          </p>
+        <div
+          v-if="showDeleteOverlay"
+          class="grid size-full pointer-events-none inset-0 place-items-center absolute"
+        >
+          <p class="text-lg font-medium">Drop to delete</p>
         </div>
       </UDraggableList>
     </UDraggableShell>
@@ -101,8 +117,14 @@ const showDeleteOverlay = computed(() => !!draggingActiveItem.value && !isOutsid
     <UContextMenu>
       <UContextMenuTrigger as-child>
         <UDraggableShell class="p-0 flex-1 w-full">
-          <div ref="activeListEl" class="rounded-sm flex flex-col gap-1 size-full overflow-y-auto">
-            <div :style="activeListBarStyles" class="bg-muted-foreground h-px absolute z-120" />
+          <div
+            ref="activeListEl"
+            class="rounded-sm flex flex-col gap-1 size-full overflow-y-auto"
+          >
+            <div
+              :style="activeListBarStyles"
+              class="bg-muted-foreground h-px absolute z-120"
+            />
             <div
               v-for="item in fields"
               :key="item"
@@ -124,16 +146,17 @@ const showDeleteOverlay = computed(() => !!draggingActiveItem.value && !isOutsid
                 data-no-drag
                 @click="handleRemoveField(item)"
               >
-                <Icon name="tabler:trash" class="size-3.5!" />
+                <Icon
+                  name="tabler:trash"
+                  class="size-3.5!"
+                />
               </UButton>
             </div>
           </div>
         </UDraggableShell>
       </UContextMenuTrigger>
       <UContextMenuContent>
-        <UContextMenuItem @click="handleRemoveField(selectedField)">
-          Remove
-        </UContextMenuItem>
+        <UContextMenuItem @click="handleRemoveField(selectedField)"> Remove </UContextMenuItem>
       </UContextMenuContent>
     </UContextMenu>
   </div>

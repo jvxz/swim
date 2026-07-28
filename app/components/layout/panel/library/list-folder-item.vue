@@ -11,22 +11,25 @@ defineProps<{
       <UButton
         :variant="isSelected ? 'toggled' : 'togglable'"
         :class="cn('w-full justify-start text-foreground')"
-        @click="navigateTo({
-          name: 'folder-path',
-          params: {
-            path: folder.path,
-          },
-        })"
+        @click="
+          navigateTo({
+            name: 'folder-path',
+            params: {
+              path: folder.path,
+            },
+          })
+        "
       >
-        <span :title="folder.path" class="truncate">
+        <span
+          :title="folder.path"
+          class="truncate"
+        >
           {{ folder.path }}
         </span>
       </UButton>
     </UContextMenuTrigger>
     <UContextMenuContent class="w-52">
-      <UContextMenuItem @click="() => {}">
-        Remove from library
-      </UContextMenuItem>
+      <UContextMenuItem @click="() => {}"> Remove from library </UContextMenuItem>
     </UContextMenuContent>
   </UContextMenu>
 </template>

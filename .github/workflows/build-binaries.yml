@@ -74,11 +74,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 23
-
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -98,24 +93,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libasound2-dev
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      # Owns Node (.node-version), pnpm (package.json#packageManager), vp and the
+      # dependency cache, and runs `vp install` for us.
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
         with:
-          bun-version: 1.3.10
-
-      # Cache Bun dependencies
-      - name: Cache Bun dependencies
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.bun/install/cache
-            node_modules
-          key: bun-${{ matrix.platform }}-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            bun-${{ matrix.platform }}-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+          node-version-file: .node-version
+          cache: true
 
       - name: Cache Nuxt build
         uses: actions/cache@v5

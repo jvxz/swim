@@ -17,32 +17,43 @@ interface Options extends UseMagicKeysOptions<false> {
 
 const INPUT_TAGS = ['input', 'textarea', 'button', 'select']
 
-export function onKeyStrokeSafe(keystroke: string | string[], callback: () => void, options?: Options) {
+export function onKeyStrokeSafe(
+  keystroke: string | string[],
+  callback: () => void,
+  options?: Options,
+) {
   const keys = options?.magicKeys ?? useGlobalKeys(options)
   const activeElement = options?.activeElement ?? useActiveElement()
 
   if (Array.isArray(keystroke)) {
     keystroke.forEach((key) => {
-      whenever(() => keys[key]?.value, () => {
-        const isInInput = INPUT_TAGS.includes(activeElement.value?.tagName.toLowerCase() ?? '')
-        const isInWhitelisted = options?.ignore?.some(selector => activeElement.value?.matches(selector))
+      whenever(
+        () => keys[key]?.value,
+        () => {
+          const isInInput = INPUT_TAGS.includes(activeElement.value?.tagName.toLowerCase() ?? '')
+          const isInWhitelisted = options?.ignore?.some((selector) =>
+            activeElement.value?.matches(selector),
+          )
 
-        if (isInInput && !isInWhitelisted)
-          return
+          if (isInInput && !isInWhitelisted) return
+
+          callback()
+        },
+      )
+    })
+  } else {
+    whenever(
+      () => keys[keystroke]?.value,
+      () => {
+        const isInInput = INPUT_TAGS.includes(activeElement.value?.tagName.toLowerCase() ?? '')
+        const isInWhitelisted = options?.ignore?.some((selector) =>
+          activeElement.value?.matches(selector),
+        )
+
+        if (isInInput && !isInWhitelisted) return
 
         callback()
-      })
-    })
-  }
-  else {
-    whenever(() => keys[keystroke]?.value, () => {
-      const isInInput = INPUT_TAGS.includes(activeElement.value?.tagName.toLowerCase() ?? '')
-      const isInWhitelisted = options?.ignore?.some(selector => activeElement.value?.matches(selector))
-
-      if (isInInput && !isInWhitelisted)
-        return
-
-      callback()
-    })
+      },
+    )
   }
 }

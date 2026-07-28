@@ -21,8 +21,17 @@ export default defineNuxtPlugin({
     if (windowLabelIs('main')) {
       listen<string>('backend-error', ({ payload }) => {
         const colonIdx = payload.indexOf(':')
-        const msg = colonIdx !== -1 ? payload.slice(colonIdx + 1).trim().slice(1, -1) : payload
-        const title = objectValues(ERROR_TITLE_MAP).find(t => payload.slice(0, colonIdx !== -1 ? colonIdx : undefined)?.includes(t)) ?? ERROR_TITLE_MAP.Other
+        const msg =
+          colonIdx !== -1
+            ? payload
+                .slice(colonIdx + 1)
+                .trim()
+                .slice(1, -1)
+            : payload
+        const title =
+          objectValues(ERROR_TITLE_MAP).find((t) =>
+            payload.slice(0, colonIdx !== -1 ? colonIdx : undefined)?.includes(t),
+          ) ?? ERROR_TITLE_MAP.Other
 
         emitDialog(msg, { kind: 'error', title })
         emitConsoleMessage({
@@ -40,8 +49,7 @@ export default defineNuxtPlugin({
           text: err.message,
           type: 'error',
         })
-      }
-      else {
+      } else {
         emitDialog(String(err), { kind: 'error', title: ERROR_TITLE_MAP.Other })
         emitConsoleMessage({
           text: String(err),

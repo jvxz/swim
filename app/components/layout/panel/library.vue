@@ -10,15 +10,23 @@ const { createPlaylist } = useUserPlaylists()
       </UContextMenuTrigger>
       <UContextMenuContent>
         <UContextMenuItem
-          @click="createPlaylist({
-            name: 'New playlist',
-          })"
+          @click="
+            createPlaylist({
+              name: 'New playlist',
+            })
+          "
         >
-          <Icon name="tabler:playlist-add" class="size-4" />
+          <Icon
+            name="tabler:playlist-add"
+            class="size-4"
+          />
           New playlist
         </UContextMenuItem>
         <UContextMenuItem>
-          <Icon name="tabler:folder-plus" class="size-4" />
+          <Icon
+            name="tabler:folder-plus"
+            class="size-4"
+          />
           New folder
         </UContextMenuItem>
       </UContextMenuContent>

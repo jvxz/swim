@@ -2,4 +2,4 @@
 set -a
 source "$(dirname "$0")/../.env"
 set +a
-bun run tauri:build
+vp run tauri:build

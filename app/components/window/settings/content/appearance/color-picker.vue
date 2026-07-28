@@ -13,8 +13,7 @@ const isColorValid = shallowRef(true)
 
 const colorPicker = shallowRef<HTMLInputElement | null>(null)
 function handleColorPickerClick() {
-  if (!colorPicker.value)
-    return
+  if (!colorPicker.value) return
   colorPicker.value?.click()
 }
 
@@ -24,8 +23,7 @@ const localColor = refWithControl(settings.appearance.token[settingKey], {
       Color.parse(color)
       settings.appearance.token[settingKey] = color
       isColorValid.value = true
-    }
-    catch {
+    } catch {
       isColorValid.value = false
     }
   },
@@ -36,8 +34,7 @@ const borderColor = computed(() => {
     const color = Color.parse(settings.appearance.token[settingKey])
 
     return Color.lighten(color, 0.5).toString()
-  }
-  catch {
+  } catch {
     return 'transparent'
   }
 })

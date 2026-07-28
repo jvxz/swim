@@ -4,7 +4,15 @@ const { id3Frame, track } = defineProps<{
   track: TrackListEntry | null
 }>()
 
-const { isCommittingChanges, isEditable, isEditingMultiple, isValueDirty, proposedFrameChanges, proposedMixedFrames, revertChange } = useMetadataStore()!
+const {
+  isCommittingChanges,
+  isEditable,
+  isEditingMultiple,
+  isValueDirty,
+  proposedFrameChanges,
+  proposedMixedFrames,
+  revertChange,
+} = useMetadataStore()!
 
 const isDirty = computed(() => isValueDirty(id3Frame))
 
@@ -15,36 +23,32 @@ const mixedValues = useArrayUnique(() => {
     return singleValue ? [singleValue] : []
   }
 
-  return values.filter(value => value.trim() !== '')
+  return values.filter((value) => value.trim() !== '')
 })
 
 const frameType = computed({
   get: () => {
     const targetFrame = proposedFrameChanges.value[id3Frame]
-    if (targetFrame?.type === null)
-      return false
-
-    else if (targetFrame?.type === 'set' || targetFrame?.type === 'clear')
-      return true
-
+    if (targetFrame?.type === null) return false
+    else if (targetFrame?.type === 'set' || targetFrame?.type === 'clear') return true
     else return false
   },
   set: (value: boolean) => {
     const targetFrame = proposedFrameChanges.value[id3Frame]
     if (targetFrame && targetFrame.type !== null && targetFrame.value)
-      value ? (proposedFrameChanges.value[id3Frame] = { ...targetFrame, type: 'clear' }) : revertChange(id3Frame)
-
+      value
+        ? (proposedFrameChanges.value[id3Frame] = { ...targetFrame, type: 'clear' })
+        : revertChange(id3Frame)
     else if (targetFrame && targetFrame.value && targetFrame.type === null)
-      value ? (proposedFrameChanges.value[id3Frame] = { ...targetFrame, type: 'set' }) : revertChange(id3Frame)
-
+      value
+        ? (proposedFrameChanges.value[id3Frame] = { ...targetFrame, type: 'set' })
+        : revertChange(id3Frame)
     else if (!targetFrame) {
       proposedFrameChanges.value[id3Frame] = {
         type: value ? 'clear' : null,
         value: '',
       }
-    }
-
-    else if (!targetFrame?.value) {
+    } else if (!targetFrame?.value) {
       switch (targetFrame?.type) {
         case 'clear': {
           revertChange(id3Frame)
@@ -71,25 +75,19 @@ const frameValue = computed({
         type: 'set',
         value,
       }
-    }
-    else if (value && (!targetFrame || targetFrame?.type === null)) {
+    } else if (value && (!targetFrame || targetFrame?.type === null)) {
       proposedFrameChanges.value[id3Frame] = {
         type: 'set',
         value,
       }
-    }
-    else if (value && targetFrame) {
+    } else if (value && targetFrame) {
       if (targetFrame.value !== value) {
         proposedFrameChanges.value[id3Frame] = {
           type: 'set',
           value,
         }
-      }
-      else
-        revertChange(id3Frame)
-    }
-
-    else if (!value) {
+      } else revertChange(id3Frame)
+    } else if (!value) {
       proposedFrameChanges.value[id3Frame] = {
         type: 'clear',
         value: '',
@@ -108,7 +106,10 @@ const frameValue = computed({
         v-model:model-value="frameType"
         :disabled="!isEditable"
       />
-      <ULabel :for="isEditable ? id3Frame : undefined" class="text-sm shrink-0">
+      <ULabel
+        :for="isEditable ? id3Frame : undefined"
+        class="text-sm shrink-0"
+      >
         {{ ID3_MAP[id3Frame] }}
       </ULabel>
       <div class="flex-1" />
@@ -172,7 +173,10 @@ const frameValue = computed({
           </UAutocompleteViewport>
         </UAutocompleteContent>
       </UAutocompleteRoot>
-      <UInput v-else disabled />
+      <UInput
+        v-else
+        disabled
+      />
     </template>
   </div>
 </template>

@@ -9,14 +9,15 @@ const { isOutside: isOutsideContainer } = useMouseInElement(containerEl)
 const { elementDraggingData, isElementAllowedInPanel } = useLayout()
 
 const containerHoverClass = computed(() => {
-  if (!elementDraggingData.value)
-    return ''
+  if (!elementDraggingData.value) return ''
 
-  if (!isElementAllowedInPanel(props.panel.key, elementDraggingData.value.element) && elementDraggingData.value.from !== props.panel.key)
+  if (
+    !isElementAllowedInPanel(props.panel.key, elementDraggingData.value.element) &&
+    elementDraggingData.value.from !== props.panel.key
+  )
     return 'opacity-50'
 
-  if (!isOutsideContainer.value)
-    return 'bg-muted/40'
+  if (!isOutsideContainer.value) return 'bg-muted/40'
 
   return ''
 })

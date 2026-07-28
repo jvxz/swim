@@ -3,6 +3,7 @@
 This file provides instructions and context for AI coding agents working on this project.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:7510c1e2 -->
+
 ## Beads Issue Tracker
 
 This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
@@ -44,34 +45,52 @@ bd close <id>         # Complete work
 7. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
+
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
-<!-- END BEADS INTEGRATION -->
 
+<!-- END BEADS INTEGRATION -->
 
 ## Build & Test
 
-Package manager is **bun** — `preinstall` runs `only-allow bun`, so npm/pnpm/yarn will fail.
+Toolchain is **Vite+** (`vp`), package manager is **pnpm** — `preinstall` runs
+`only-allow pnpm`, so npm/yarn/bun will fail. `vp` also owns Node (`.node-version`)
+and the pnpm version (`package.json#packageManager`); install it once from
+<https://viteplus.dev> and let it bootstrap the rest.
 
 ```bash
-bun install       # deps (postinstall runs `nuxt prepare`)
-bun run dev       # tauri dev (Nuxt + Rust)
-bun run lint      # eslint .
-bun run test      # vitest
-bun run test:e2e  # wdio (needs a built binary)
-bun run build     # scripts/build.sh
-bun run db:types  # regenerate app/types/db.ts via kysely-codegen
+vp install        # deps (postinstall runs `nuxt prepare`)
+vp run dev        # tauri dev (Nuxt + Rust)
+vp check          # oxfmt + oxlint + type check
+vp run lint       # eslint, **/*.vue only
+vp test           # vitest, one-shot (`vp test watch` to watch)
+vp run test:e2e   # wdio (needs a built binary)
+vp run build      # scripts/build.sh
+vp run db:types   # regenerate app/types/db.ts via kysely-codegen
 ```
 
-Quality gate before closing an issue: `bun run lint && bun run test`.
+Quality gate before closing an issue: `vp check && vp run lint`.
+
+`vp dev`, `vp build` and `vp test` are built-ins and **cannot** be shadowed by
+same-named scripts — use `vp run <script>` for `dev`, `build`, `generate` etc., which
+are Tauri/Nuxt commands, not Vite ones.
+
+`vue` is pinned to an exact `3.5.30`. On 3.5.40 `@vue/compiler-sfc` fails to resolve
+`interface X extends Omit<Y, …>` coming from reka-ui's bundled `.d.ts`, and the Nuxt
+build dies with seven "Failed to resolve extends base type" errors. Re-test before
+unpinning — see the beads issue for details.
+
+Linting is split deliberately:
+
+- `vite.config.ts` — oxfmt + oxlint config. oxfmt formats **every** file type,
+  `.vue` included; oxlint + tsgolint lint and type-check JS/TS.
+- `eslint.config.mjs` — ESLint, scoped to `**/*.vue` only, because oxlint has no SFC
+  parser. Do not widen the `lint` script back to `eslint .` or it starts duplicating
+  oxlint on every TS file.
 
 ## Architecture Overview
 
 See [AGENTS.md](AGENTS.md) — stack, per-platform webview differences, module map, and
 the performance/security priorities. Read it before your first edit.
-
-## Conventions & Patterns
-
-See [.cursorrules](.cursorrules) (422 lines) for Nuxt/Vue/UnoCSS/Reka UI conventions.

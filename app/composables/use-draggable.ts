@@ -38,7 +38,11 @@ export const useDraggableData = createGlobalState(() => {
   const dragGhostElement = shallowRef<HTMLElement | null>(null)
 
   const pointer = useGlobalPointer()
-  const { element: hoveredElement, pause: pauseElementByPointWatch, resume: resumeElementByPointWatch } = useElementByPoint({
+  const {
+    element: hoveredElement,
+    pause: pauseElementByPointWatch,
+    resume: resumeElementByPointWatch,
+  } = useElementByPoint({
     immediate: false,
     x: pointer.x,
     y: pointer.y,
@@ -75,10 +79,14 @@ export const useDraggableData = createGlobalState(() => {
   }
 })
 
-export function useDraggable<T>(list: Ref<T[]>, container: MaybeRef<MaybeElementRef>, options: MaybeRefOrGetter<DraggableOptions<T>> = {
-  direction: 'vertical',
-  mode: 'item',
-}) {
+export function useDraggable<T>(
+  list: Ref<T[]>,
+  container: MaybeRef<MaybeElementRef>,
+  options: MaybeRefOrGetter<DraggableOptions<T>> = {
+    direction: 'vertical',
+    mode: 'item',
+  },
+) {
   const {
     dragGhostElement,
     draggingItem,
@@ -100,56 +108,53 @@ export function useDraggable<T>(list: Ref<T[]>, container: MaybeRef<MaybeElement
    * the item that is being hovered
    */
   const dropTargetItem = computed<DragItem<T> | null>((_prev) => {
-    if (!isDragging.value || !isOverContainer.value)
-      return null
+    if (!isDragging.value || !isOverContainer.value) return null
 
     let el = unrefElement(hoveredElement)
-    while (el && !validElements.has(el))
-      el = el.parentElement
+    while (el && !validElements.has(el)) el = el.parentElement
 
-    if (!el)
-      return null
+    if (!el) return null
 
     const item = lookupElement(el)
-    if (!item || item.group !== toValue(options).group)
-      return null
+    if (!item || item.group !== toValue(options).group) return null
 
     return item
   })
 
   let dragUpdateCount = 0
   let potentialDraggingItem: DragItem<T> | null = null
-  const { pause: pausePointerWatch, resume: resumePointerWatch } = watch([pointer.x, pointer.y], () => {
-    if (isDragging.value)
-      return pausePointerWatch()
+  const { pause: pausePointerWatch, resume: resumePointerWatch } = watch(
+    [pointer.x, pointer.y],
+    () => {
+      if (isDragging.value) return pausePointerWatch()
 
-    if (!potentialDraggingItem)
-      return pausePointerWatch()
+      if (!potentialDraggingItem) return pausePointerWatch()
 
-    dragUpdateCount++
+      dragUpdateCount++
 
-    if (dragUpdateCount >= DRAG_UPDATE_THRESHOLD) {
-      pausePointerWatch()
-      resumeHoverWatch()
-      dragUpdateCount = 0
-      isDragging.value = true
+      if (dragUpdateCount >= DRAG_UPDATE_THRESHOLD) {
+        pausePointerWatch()
+        resumeHoverWatch()
+        dragUpdateCount = 0
+        isDragging.value = true
 
-      draggingItem.value = potentialDraggingItem
-      handleDragGhost('add')
+        draggingItem.value = potentialDraggingItem
+        handleDragGhost('add')
 
-      const classValue = toValue(options).class?.dragging
-      if (draggingItem.value && classValue)
-        draggingItem.value.element.classList.add(classValue)
+        const classValue = toValue(options).class?.dragging
+        if (draggingItem.value && classValue) draggingItem.value.element.classList.add(classValue)
 
-      toValue(options).onDragStart?.(potentialDraggingItem)
+        toValue(options).onDragStart?.(potentialDraggingItem)
 
-      document.body.style.cursor = 'move'
+        document.body.style.cursor = 'move'
 
-      potentialDraggingItem = null
-    }
-  }, {
-    immediate: false,
-  })
+        potentialDraggingItem = null
+      }
+    },
+    {
+      immediate: false,
+    },
+  )
 
   onMouseRelease((wasDragging) => {
     pausePointerWatch()
@@ -161,35 +166,37 @@ export function useDraggable<T>(list: Ref<T[]>, container: MaybeRef<MaybeElement
     handleDragGhost('remove')
 
     const classValue = toValue(options).class?.dragging
-    if (draggingItem.value && classValue)
-      draggingItem.value.element.classList.remove(classValue)
+    if (draggingItem.value && classValue) draggingItem.value.element.classList.remove(classValue)
 
     const draggedFromList = draggingItem.value?._listId === listId
     const draggedToList = dropTargetItem.value?._listId === listId
-    const isFromSameGroup = draggingItem.value?.group === toValue(options).group || dropTargetItem.value?.group === toValue(options).group
+    const isFromSameGroup =
+      draggingItem.value?.group === toValue(options).group ||
+      dropTargetItem.value?.group === toValue(options).group
 
     if (
-      wasDragging
-      && draggingItem.value
-      && isOverContainer.value
-      && dropTargetItem.value
-      && isFromSameGroup
-      && (draggedFromList || draggedToList)
+      wasDragging &&
+      draggingItem.value &&
+      isOverContainer.value &&
+      dropTargetItem.value &&
+      isFromSameGroup &&
+      (draggedFromList || draggedToList)
     )
       toValue(options).onDragEnd?.(createHookParams())
   })
 
-  const { pause: pauseHoveredElementWatch, resume: resumeHoveredElementWatch } = watch(dropTargetItem, (currentItem) => {
-    if (!currentItem || !lookupElement(currentItem.element))
-      return
+  const { pause: pauseHoveredElementWatch, resume: resumeHoveredElementWatch } = watch(
+    dropTargetItem,
+    (currentItem) => {
+      if (!currentItem || !lookupElement(currentItem.element)) return
 
-    if (currentItem.group === toValue(options).group)
-      toValue(options).onDragOver?.(createHookParams())
-  })
+      if (currentItem.group === toValue(options).group)
+        toValue(options).onDragOver?.(createHookParams())
+    },
+  )
 
   function handlePointerDown(data: T, element: any) {
-    if (!(element instanceof HTMLElement))
-      return
+    if (!(element instanceof HTMLElement)) return
 
     resumePointerWatch()
 
@@ -203,143 +210,152 @@ export function useDraggable<T>(list: Ref<T[]>, container: MaybeRef<MaybeElement
 
   const inElementHalf = shallowRef<'bottom/right' | 'top/left' | null>()
   const barStyles = shallowRef<StyleValue | null>(null)
-  const { pause: pauseRafFn, resume: resumeRafFn } = useRafFn(() => {
-    handleElementHalf()
-    handleBar()
-    handleDragGhostPosition()
-    handleOverContainer()
+  const { pause: pauseRafFn, resume: resumeRafFn } = useRafFn(
+    () => {
+      handleElementHalf()
+      handleBar()
+      handleDragGhostPosition()
+      handleOverContainer()
 
-    function handleElementHalf() {
-      const hoveredElement = dropTargetItem.value?.element
-      if (!hoveredElement)
-        return inElementHalf.value = null
+      function handleElementHalf() {
+        const hoveredElement = dropTargetItem.value?.element
+        if (!hoveredElement) return (inElementHalf.value = null)
 
-      if (toValue(options).direction === 'horizontal') {
+        if (toValue(options).direction === 'horizontal') {
+          const hoveredElementRect = hoveredElement.getBoundingClientRect()
+          const relativePosition = pointer.x.value - hoveredElementRect.left
+
+          return (inElementHalf.value =
+            relativePosition > hoveredElementRect.width / 2 ? 'bottom/right' : 'top/left')
+        }
+
         const hoveredElementRect = hoveredElement.getBoundingClientRect()
-        const relativePosition = pointer.x.value - hoveredElementRect.left
+        const relativePosition = pointer.y.value - hoveredElementRect.top
 
-        return inElementHalf.value = relativePosition > hoveredElementRect.width / 2 ? 'bottom/right' : 'top/left'
+        return (inElementHalf.value =
+          relativePosition > hoveredElementRect.height / 2 ? 'bottom/right' : 'top/left')
       }
 
-      const hoveredElementRect = hoveredElement.getBoundingClientRect()
-      const relativePosition = pointer.y.value - hoveredElementRect.top
+      function handleBar() {
+        const hoveredElement = dropTargetItem.value?.element
+        if (!hoveredElement || !isDragging.value || !inElementHalf.value || !isOverContainer.value)
+          return (barStyles.value = null)
 
-      return inElementHalf.value = relativePosition > hoveredElementRect.height / 2 ? 'bottom/right' : 'top/left'
-    }
+        if (
+          draggingItem.value &&
+          draggingItem.value.group &&
+          draggingItem.value.group !== toValue(options).group
+        )
+          return barStyles.value
 
-    function handleBar() {
-      const hoveredElement = dropTargetItem.value?.element
-      if (!hoveredElement || !isDragging.value || !inElementHalf.value || !isOverContainer.value)
-        return barStyles.value = null
+        const half = inElementHalf.value
 
-      if (
-        draggingItem.value
-        && draggingItem.value.group
-        && draggingItem.value.group !== toValue(options).group
-      )
-        return barStyles.value
+        const parentElement = hoveredElement.parentElement
+        if (parentElement && !barGap) {
+          const gap = getComputedStyle(parentElement).gap
+          if (gap === 'normal') barGap = `${0}px`
+          else barGap = gap
+        }
 
-      const half = inElementHalf.value
+        const siblingElement = getValidSibling(
+          hoveredElement,
+          half === 'bottom/right' ? 'next' : 'prev',
+        )
 
-      const parentElement = hoveredElement.parentElement
-      if (parentElement && !barGap) {
-        const gap = getComputedStyle(parentElement).gap
-        if (gap === 'normal')
-          barGap = `${0}px`
-        else
-          barGap = gap
-      }
+        const hoveredElementRect = hoveredElement.getBoundingClientRect()
 
-      const siblingElement = getValidSibling(hoveredElement, half === 'bottom/right' ? 'next' : 'prev')
+        // if first or last
+        if (!siblingElement || !lookupElement(siblingElement)) {
+          if (toValue(options).direction === 'vertical') {
+            const topValue =
+              half === 'bottom/right'
+                ? hoveredElementRect.height + hoveredElementRect.top
+                : hoveredElementRect.top
 
-      const hoveredElementRect = hoveredElement.getBoundingClientRect()
+            const top = `calc(${topValue}px ${half === 'bottom/right' ? '+' : '-'} ${barGap} / 2)`
 
-      // if first or last
-      if (!siblingElement || !lookupElement(siblingElement)) {
+            return (barStyles.value = {
+              top,
+              width: `${hoveredElementRect.width}px`,
+            })
+          }
+
+          const leftValue =
+            half === 'bottom/right'
+              ? hoveredElementRect.width + hoveredElementRect.left
+              : hoveredElementRect.left
+
+          const left = `calc(${leftValue}px ${half === 'bottom/right' ? '+' : '-'} ${barGap} / 2)`
+
+          return (barStyles.value = {
+            height: `${hoveredElementRect.height}px`,
+            left,
+          })
+        }
+
+        const siblingElementRect = siblingElement.getBoundingClientRect()
+
         if (toValue(options).direction === 'vertical') {
-          const topValue = half === 'bottom/right'
-            ? (hoveredElementRect.height + hoveredElementRect.top)
-            : (hoveredElementRect.top)
+          const topValue =
+            half === 'bottom/right'
+              ? (hoveredElementRect.height + hoveredElementRect.top + siblingElementRect.top) / 2
+              : (siblingElementRect.height + siblingElementRect.top + hoveredElementRect.top) / 2
 
-          const top = `calc(${topValue}px ${half === 'bottom/right' ? '+' : '-'} ${barGap} / 2)`
+          const top = `${topValue}px`
 
-          return barStyles.value = {
+          return (barStyles.value = {
             top,
             width: `${hoveredElementRect.width}px`,
-          }
+          })
         }
 
-        const leftValue = half === 'bottom/right'
-          ? (hoveredElementRect.width + hoveredElementRect.left)
-          : (hoveredElementRect.left)
+        const leftValue =
+          half === 'bottom/right'
+            ? (hoveredElementRect.width + hoveredElementRect.left + siblingElementRect.left) / 2
+            : (siblingElementRect.width + siblingElementRect.left + hoveredElementRect.left) / 2
 
-        const left = `calc(${leftValue}px ${half === 'bottom/right' ? '+' : '-'} ${barGap} / 2)`
+        const left = `${leftValue}px`
 
-        return barStyles.value = {
+        return (barStyles.value = {
           height: `${hoveredElementRect.height}px`,
           left,
+        })
+
+        function getValidSibling(el: Element, direction: 'next' | 'prev') {
+          let sibling = direction === 'next' ? el.nextElementSibling : el.previousElementSibling
+          while (sibling && !lookupElement(sibling))
+            sibling =
+              direction === 'next' ? sibling.nextElementSibling : sibling.previousElementSibling
+
+          return sibling
         }
       }
 
-      const siblingElementRect = siblingElement.getBoundingClientRect()
+      function handleDragGhostPosition() {
+        if (!dragGhostElement.value) return
 
-      if (toValue(options).direction === 'vertical') {
-        const topValue = half === 'bottom/right'
-          ? (hoveredElementRect.height + hoveredElementRect.top + siblingElementRect.top) / 2
-          : (siblingElementRect.height + siblingElementRect.top + hoveredElementRect.top) / 2
+        const el = dragGhostElement.value
 
-        const top = `${topValue}px`
+        const topValue = getViewportBoundPosition('y', el)
+        const leftValue = getViewportBoundPosition('x', el)
 
-        return barStyles.value = {
-          top,
-          width: `${hoveredElementRect.width}px`,
-        }
+        el.style.top = `${topValue}px`
+        el.style.left = `${leftValue}px`
       }
 
-      const leftValue = half === 'bottom/right'
-        ? (hoveredElementRect.width + hoveredElementRect.left + siblingElementRect.left) / 2
-        : (siblingElementRect.width + siblingElementRect.left + hoveredElementRect.left) / 2
-
-      const left = `${leftValue}px`
-
-      return barStyles.value = {
-        height: `${hoveredElementRect.height}px`,
-        left,
+      function handleOverContainer() {
+        isOverContainer.value = document
+          .elementsFromPoint(pointer.x.value, pointer.y.value)
+          .includes(unrefElement(toValue(container))!)
       }
-
-      function getValidSibling(el: Element, direction: 'next' | 'prev') {
-        let sibling = direction === 'next' ? el.nextElementSibling : el.previousElementSibling
-        while (sibling && !lookupElement(sibling))
-          sibling = direction === 'next' ? sibling.nextElementSibling : sibling.previousElementSibling
-
-        return sibling
-      }
-    }
-
-    function handleDragGhostPosition() {
-      if (!dragGhostElement.value)
-        return
-
-      const el = dragGhostElement.value
-
-      const topValue = getViewportBoundPosition('y', el)
-      const leftValue = getViewportBoundPosition('x', el)
-
-      el.style.top = `${topValue}px`
-      el.style.left = `${leftValue}px`
-    }
-
-    function handleOverContainer() {
-      isOverContainer.value = document.elementsFromPoint(pointer.x.value, pointer.y.value).includes(unrefElement(toValue(container))!)
-    }
-  }, {
-    immediate: false,
-  })
+    },
+    {
+      immediate: false,
+    },
+  )
 
   watch(isDragging, (v) => {
-    if (v)
-      return resumeRafFn()
-
+    if (v) return resumeRafFn()
     else {
       pauseRafFn()
       barStyles.value = null
@@ -357,16 +373,19 @@ export function useDraggable<T>(list: Ref<T[]>, container: MaybeRef<MaybeElement
   }
 
   const getDragElementProps = (data: T) => {
-    const onVnodeMounted: VNodeProps['onVnodeMounted'] = e => e.el && e.el instanceof Element && validElements.set(e.el, {
-      _listId: listId,
-      data,
-      element: e.el,
-      group: toValue(options).group,
-    })
-    const onVnodeBeforeUnmount: VNodeProps['onVnodeBeforeUnmount'] = e => e.el && validElements.delete(e.el)
+    const onVnodeMounted: VNodeProps['onVnodeMounted'] = (e) =>
+      e.el &&
+      e.el instanceof Element &&
+      validElements.set(e.el, {
+        _listId: listId,
+        data,
+        element: e.el,
+        group: toValue(options).group,
+      })
+    const onVnodeBeforeUnmount: VNodeProps['onVnodeBeforeUnmount'] = (e) =>
+      e.el && validElements.delete(e.el)
     const onPointerdown = (event: PointerEvent) => {
-      if (event.button !== 0 || (event.target as HTMLElement).closest('[data-no-drag]'))
-        return
+      if (event.button !== 0 || (event.target as HTMLElement).closest('[data-no-drag]')) return
 
       handlePointerDown(data, event.currentTarget)
     }
@@ -414,28 +433,25 @@ export function useDraggable<T>(list: Ref<T[]>, container: MaybeRef<MaybeElement
   }
 
   function lookupElement(el: DragItem<T>['element'] | null): DragItem<T> | null {
-    if (!el)
-      return null
+    if (!el) return null
 
     const data = validElements.get(el)
-    if (!data)
-      return null
+    if (!data) return null
 
     return data as DragItem<T>
   }
 
   function handleDragGhost(action: 'add' | 'remove') {
-    if (!toValue(options).doDragGhost)
-      return
+    if (!toValue(options).doDragGhost) return
 
-    if (!draggingItem.value?.element)
-      return
+    if (!draggingItem.value?.element) return
 
     if (action === 'add') {
-      if (dragGhostElement.value)
-        return
+      if (dragGhostElement.value) return
 
-      const el = document.body.appendChild(draggingItem.value.element.cloneNode(true) as HTMLElement)
+      const el = document.body.appendChild(
+        draggingItem.value.element.cloneNode(true) as HTMLElement,
+      )
 
       el.style.position = 'absolute'
       el.style.opacity = '0.5'
@@ -443,10 +459,8 @@ export function useDraggable<T>(list: Ref<T[]>, container: MaybeRef<MaybeElement
       el.style.width = 'fit-content'
 
       dragGhostElement.value = el
-    }
-    else {
-      if (!dragGhostElement.value)
-        return
+    } else {
+      if (!dragGhostElement.value) return
 
       dragGhostElement.value.remove()
       dragGhostElement.value = null
@@ -466,7 +480,9 @@ export function useDraggable<T>(list: Ref<T[]>, container: MaybeRef<MaybeElement
     }
   })
 
-  const localDraggingItem = computed(() => draggingItem.value?._listId === listId ? draggingItem.value as DragItem<T> : null)
+  const localDraggingItem = computed(() =>
+    draggingItem.value?._listId === listId ? (draggingItem.value as DragItem<T>) : null,
+  )
 
   return {
     barStyles,
@@ -477,21 +493,23 @@ export function useDraggable<T>(list: Ref<T[]>, container: MaybeRef<MaybeElement
 }
 
 type Filter = (() => boolean) | boolean
-export function handleListRearrange<T>(listRef: MaybeRefOrGetter<T[]>, paramsRef: MaybeRefOrGetter<HookParams<T>>, filters: {
-  doRemoval?: Filter
-  doMoving?: Filter
-  doAdding?: Filter
-} = {}) {
+export function handleListRearrange<T>(
+  listRef: MaybeRefOrGetter<T[]>,
+  paramsRef: MaybeRefOrGetter<HookParams<T>>,
+  filters: {
+    doRemoval?: Filter
+    doMoving?: Filter
+    doAdding?: Filter
+  } = {},
+) {
   const list = toValue(listRef)
   const params = toValue(paramsRef)
 
-  if (!params.targetItem?.data || (!params.targetIdx && params.targetIdx !== 0))
-    return list
+  if (!params.targetItem?.data || (!params.targetIdx && params.targetIdx !== 0)) return list
 
   // handle moving to different list (remove)
   if (params.prevIdx !== -1 && params.prevItem._listId !== params.targetItem._listId) {
-    if (!check(filters.doRemoval))
-      return list
+    if (!check(filters.doRemoval)) return list
 
     const arr = [...list]
     arr.splice(params.prevIdx, 1)
@@ -505,11 +523,9 @@ export function handleListRearrange<T>(listRef: MaybeRefOrGetter<T[]>, paramsRef
   return check(filters.doMoving) ? moveArrayMember(list, params.prevIdx, params.targetIdx) : list
 
   function check(f: Filter | undefined): boolean {
-    if (!f)
-      return true
+    if (!f) return true
 
-    if (typeof f === 'function')
-      return f()
+    if (typeof f === 'function') return f()
 
     return f
   }

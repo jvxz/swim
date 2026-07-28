@@ -31,35 +31,18 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      # for Swatinem/rust-cache
-      - uses: actions/setup-node@v6
+      # Owns Node (.node-version), pnpm (package.json#packageManager), vp and the
+      # dependency cache, and runs `vp install` for us.
+      - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: 23
+          node-version-file: .node-version
+          cache: true
 
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
           prefix-key: e2e-ubicloud
           workspaces: src-tauri -> target
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 23
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.10
-
-      - name: cache bun
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.bun/install/cache
-          key: bun-e2e-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            bun-e2e-
-
-      - run: bun install --frozen-lockfile
 
       - name: cache tauri-driver binary
         id: tauri-driver-cache
@@ -73,4 +56,4 @@ jobs:
         run: cargo install tauri-driver --locked
 
       - name: run tests
-        run: xvfb-run bun run test:e2e
+        run: xvfb-run vp run test:e2e

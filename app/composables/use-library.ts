@@ -8,101 +8,136 @@ export function useLibrary() {
   async function getLibraryTracks() {
     const tracks = await $db().selectFrom('library_tracks').selectAll().execute()
 
-    return await getTracksData(tracks.map(track => track.path))
+    return await getTracksData(tracks.map((track) => track.path))
   }
 
-  const getLibraryFolders = () => useAsyncData(LIBRARY_FOLDERS_KEY, () => $db().selectFrom('library_folders').selectAll().execute(), { immediate: true })
+  const getLibraryFolders = () =>
+    useAsyncData(
+      LIBRARY_FOLDERS_KEY,
+      () => $db().selectFrom('library_folders').selectAll().execute(),
+      { immediate: true },
+    )
 
-  const { execute: addFolderToLibrary, isLoading: isAddingFolderToLibrary } = useAsyncState<void>(async (folderPath: string) => {
-    const exists = await useTauriFsExists(folderPath)
-    if (!exists)
-      // TODO: show error toast
-      return
+  const { execute: addFolderToLibrary, isLoading: isAddingFolderToLibrary } = useAsyncState<void>(
+    async (folderPath: string) => {
+      const exists = await useTauriFsExists(folderPath)
+      if (!exists)
+        // TODO: show error toast
+        return
 
-    const { isDirectory } = await useTauriFsStat(folderPath)
-    if (!isDirectory)
-    // TODO: show error toast
-      return
+      const { isDirectory } = await useTauriFsStat(folderPath)
+      if (!isDirectory)
+        // TODO: show error toast
+        return
 
-    await $db().insertInto('library_folders').values({
-      path: folderPath,
-    }).execute()
+      await $db()
+        .insertInto('library_folders')
+        .values({
+          path: folderPath,
+        })
+        .execute()
 
-    const folderTracks = await getFolderTracks(folderPath)
+      const folderTracks = await getFolderTracks(folderPath)
 
-    await addTracksToLibrary(folderTracks, {
-      id: folderPath,
-      type: 'folder',
-    })
+      await addTracksToLibrary(folderTracks, {
+        id: folderPath,
+        type: 'folder',
+      })
 
-    refreshNuxtData(buildFolderInLibraryKey(folderPath))
-    refreshTrackListForType('library')
-    refreshLibraryFolders()
-  }, void 0, { immediate: false })
-
-  const { execute: removeFolderFromLibrary, isLoading: isRemovingFolderFromLibrary } = useAsyncState<void>(async (folderPath: string) => {
-    const folderTracksSources = await $db()
-      .selectFrom('library_tracks_source')
-      .where('source_type', '=', 'folder')
-      .where('source_id', '=', folderPath)
-      .selectAll()
-      .execute()
-
-    await $db()
-      .deleteFrom('library_tracks_source')
-      .where('source_type', '=', 'folder')
-      .where('source_id', '=', folderPath)
-      .execute()
-
-    const libraryTracksSources = await $db()
-      .selectFrom('library_tracks_source')
-      .where('source_id', 'is not', folderPath)
-      .where('track_id', 'in', folderTracksSources.map(source => source.track_id))
-      .selectAll()
-      .execute()
-
-    const tracksToDelete = folderTracksSources.filter(source => !libraryTracksSources.some(s => s.track_id === source.track_id))
-
-    const deletedTracks = await $db()
-      .deleteFrom('library_tracks')
-      .where('id', 'in', tracksToDelete.map(source => source.track_id))
-      .returning('path')
-      .execute()
-
-    // the tracks no longer have a date_added, so the cached file entries are stale
-    await refreshTrackData(deletedTracks.map(track => track.path))
-
-    await $db()
-      .deleteFrom('library_folders')
-      .where('path', '=', folderPath)
-      .execute()
-
-    clearNuxtData(buildFolderInLibraryKey(folderPath))
-    refreshLibraryFolders()
-    refreshTrackListForType('library')
-  }, void 0, { immediate: false })
-
-  const useFolderInLibrary = (folderPath: string) => useAsyncData(
-    computed(() => buildFolderInLibraryKey(folderPath)),
-    () => $db().selectFrom('library_folders').where('path', '=', folderPath).selectAll().executeTakeFirst(),
+      refreshNuxtData(buildFolderInLibraryKey(folderPath))
+      refreshTrackListForType('library')
+      refreshLibraryFolders()
+    },
+    void 0,
     { immediate: false },
   )
 
-  async function addTracksToLibrary(tracks: FileEntry[], source: {
-    type: 'folder' | 'playlist'
-    id: string
-  }) {
+  const { execute: removeFolderFromLibrary, isLoading: isRemovingFolderFromLibrary } =
+    useAsyncState<void>(
+      async (folderPath: string) => {
+        const folderTracksSources = await $db()
+          .selectFrom('library_tracks_source')
+          .where('source_type', '=', 'folder')
+          .where('source_id', '=', folderPath)
+          .selectAll()
+          .execute()
+
+        await $db()
+          .deleteFrom('library_tracks_source')
+          .where('source_type', '=', 'folder')
+          .where('source_id', '=', folderPath)
+          .execute()
+
+        const libraryTracksSources = await $db()
+          .selectFrom('library_tracks_source')
+          .where('source_id', 'is not', folderPath)
+          .where(
+            'track_id',
+            'in',
+            folderTracksSources.map((source) => source.track_id),
+          )
+          .selectAll()
+          .execute()
+
+        const tracksToDelete = folderTracksSources.filter(
+          (source) => !libraryTracksSources.some((s) => s.track_id === source.track_id),
+        )
+
+        const deletedTracks = await $db()
+          .deleteFrom('library_tracks')
+          .where(
+            'id',
+            'in',
+            tracksToDelete.map((source) => source.track_id),
+          )
+          .returning('path')
+          .execute()
+
+        // the tracks no longer have a date_added, so the cached file entries are stale
+        await refreshTrackData(deletedTracks.map((track) => track.path))
+
+        await $db().deleteFrom('library_folders').where('path', '=', folderPath).execute()
+
+        clearNuxtData(buildFolderInLibraryKey(folderPath))
+        refreshLibraryFolders()
+        refreshTrackListForType('library')
+      },
+      void 0,
+      { immediate: false },
+    )
+
+  const useFolderInLibrary = (folderPath: string) =>
+    useAsyncData(
+      computed(() => buildFolderInLibraryKey(folderPath)),
+      () =>
+        $db()
+          .selectFrom('library_folders')
+          .where('path', '=', folderPath)
+          .selectAll()
+          .executeTakeFirst(),
+      { immediate: false },
+    )
+
+  async function addTracksToLibrary(
+    tracks: FileEntry[],
+    source: {
+      type: 'folder' | 'playlist'
+      id: string
+    },
+  ) {
     await $db()
       .insertInto('library_tracks')
-      .values(tracks.map(track => ({
-        album: track.tags.TALB ?? null,
-        artist: track.tags.TPE1 ?? null,
-        date_added: sql<string>`CURRENT_TIMESTAMP`,
-        filename: track.name,
-        path: track.path,
-        title: track.tags.TIT2 ?? null,
-      })))
-      .onConflict(conflict => conflict.doNothing())
+      .values(
+        tracks.map((track) => ({
+          album: track.tags.TALB ?? null,
+          artist: track.tags.TPE1 ?? null,
+          date_added: sql<string>`CURRENT_TIMESTAMP`,
+          filename: track.name,
+          path: track.path,
+          title: track.tags.TIT2 ?? null,
+        })),
+      )
+      .onConflict((conflict) => conflict.doNothing())
       .returningAll()
       .execute()
 
@@ -110,29 +145,39 @@ export function useLibrary() {
     // conflict is found then the corresponding track will not be in the returning array
     const existingLibraryTracks = await $db()
       .selectFrom('library_tracks')
-      .where('path', 'in', tracks.map(track => track.path))
+      .where(
+        'path',
+        'in',
+        tracks.map((track) => track.path),
+      )
       .selectAll()
       .execute()
 
     await $db()
       .insertInto('library_tracks_source')
-      .values(existingLibraryTracks.map(track => ({
-        source_id: source.id,
-        source_type: source.type,
-        track_id: track.id,
-      })))
-      .onConflict(conflict => conflict.doNothing())
+      .values(
+        existingLibraryTracks.map((track) => ({
+          source_id: source.id,
+          source_type: source.type,
+          track_id: track.id,
+        })),
+      )
+      .onConflict((conflict) => conflict.doNothing())
       .execute()
 
     // date_added lives on the library row, so the cached file entries are now stale
-    await refreshTrackData(existingLibraryTracks.map(track => track.path))
+    await refreshTrackData(existingLibraryTracks.map((track) => track.path))
 
     refreshTrackListForType('library')
 
     return existingLibraryTracks
   }
 
-  async function addLibraryTrackSource(opts: { sourceId: string, sourceType: 'folder' | 'playlist', trackId: number }) {
+  async function addLibraryTrackSource(opts: {
+    sourceId: string
+    sourceType: 'folder' | 'playlist'
+    trackId: number
+  }) {
     const { sourceId, sourceType, trackId } = opts
     return $db()
       .insertInto('library_tracks_source')
@@ -141,7 +186,7 @@ export function useLibrary() {
         source_type: sourceType,
         track_id: trackId,
       })
-      .onConflict(conflict => conflict.doNothing())
+      .onConflict((conflict) => conflict.doNothing())
       .execute()
   }
 

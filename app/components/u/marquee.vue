@@ -126,16 +126,13 @@ const isOverflowing = computed(() => {
 })
 
 const shouldAnimate = computed(() => {
-  if (onlyScrollIfNeeded && !isOverflowing.value)
-    return false
+  if (onlyScrollIfNeeded && !isOverflowing.value) return false
 
   return play
 })
 
 const duration = computed(() => {
-  if (autoFill)
-    return (marqueeWidth.value * multiplier.value) / speed
-
+  if (autoFill) return (marqueeWidth.value * multiplier.value) / speed
   else {
     return marqueeWidth.value < containerWidth.value
       ? containerWidth.value / speed
@@ -146,10 +143,10 @@ const duration = computed(() => {
 const containerStyle = computed(() => ({
   ...style,
   '--pause-on-click':
-        !shouldAnimate.value || (pauseOnHover && !pauseOnClick) || pauseOnClick ? 'paused' : 'running',
+    !shouldAnimate.value || (pauseOnHover && !pauseOnClick) || pauseOnClick ? 'paused' : 'running',
   '--pause-on-hover': !shouldAnimate.value || pauseOnHover ? 'paused' : 'running',
   '--transform':
-        direction === 'up' ? 'rotate(-90deg)' : direction === 'down' ? 'rotate(90deg)' : 'none',
+    direction === 'up' ? 'rotate(-90deg)' : direction === 'down' ? 'rotate(90deg)' : 'none',
   '--width': direction === 'up' || direction === 'down' ? `100vh` : '100%',
 }))
 
@@ -169,7 +166,7 @@ const marqueeStyle = computed(() => ({
 
 const parentStyle = computed(() => ({
   '--transform':
-        direction === 'up' ? 'rotate(90deg)' : direction === 'down' ? 'rotate(-90deg)' : 'none',
+    direction === 'up' ? 'rotate(90deg)' : direction === 'down' ? 'rotate(-90deg)' : 'none',
 }))
 
 function calculateWidth() {
@@ -186,11 +183,9 @@ function calculateWidth() {
     }
 
     if (autoFill && _containerWidth && _marqueeWidth) {
-      multiplier.value
-        = _marqueeWidth < _containerWidth ? Math.ceil(_containerWidth / _marqueeWidth) : 1
-    }
-    else
-      multiplier.value = 1
+      multiplier.value =
+        _marqueeWidth < _containerWidth ? Math.ceil(_containerWidth / _marqueeWidth) : 1
+    } else multiplier.value = 1
 
     containerWidth.value = _containerWidth
     marqueeWidth.value = _marqueeWidth
@@ -198,7 +193,9 @@ function calculateWidth() {
 }
 
 function multiplyChildren(multiplier: number) {
-  return Array.from<number>({ length: Number.isFinite(multiplier) && multiplier >= 0 ? multiplier : 0 })
+  return Array.from<number>({
+    length: Number.isFinite(multiplier) && multiplier >= 0 ? multiplier : 0,
+  })
 }
 
 watch([() => autoFill, () => direction, isMounted, containerRef], () => {
@@ -206,8 +203,7 @@ watch([() => autoFill, () => direction, isMounted, containerRef], () => {
     calculateWidth()
 
     if (marqueeRef.value && containerRef.value) {
-      if (resizeObserver.value)
-        resizeObserver.value.disconnect()
+      if (resizeObserver.value) resizeObserver.value.disconnect()
 
       resizeObserver.value = new ResizeObserver(() => calculateWidth())
       resizeObserver.value.observe(containerRef.value)

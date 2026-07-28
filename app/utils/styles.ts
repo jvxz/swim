@@ -12,23 +12,23 @@ const interactiveStyles = {
       'hover:bg-danger/90 bg-danger/90 text-danger-foreground hover:bg-danger active:bg-danger border-danger',
     default:
       'bg-primary/85 border hover:bg-primary/90 border-primary active:bg-primary/85 text-primary-foreground',
-    ghost: 'hover:bg-muted/90 active:bg-muted/75 text-muted-foreground hover:text-foreground active:text-foreground',
+    ghost:
+      'hover:bg-muted/90 active:bg-muted/75 text-muted-foreground hover:text-foreground active:text-foreground',
     link: 'text-primary underline-offset-4 hover:underline',
-    outline:
-    'hover:bg-muted/90 active:bg-muted/80 border bg-transparent',
+    outline: 'hover:bg-muted/90 active:bg-muted/80 border bg-transparent',
     soft: 'text-muted-foreground hover:text-foreground active:text-foreground hover:bg-muted/90 active:bg-muted/80 border bg-card',
-    togglable: 'hover:bg-muted/55 data-[drag-over]:bg-muted/55 active:bg-muted/40 text-muted-foreground hover:text-foreground active:text-foreground',
-    toggled: 'bg-muted/90 data-[drag-over]:bg-muted/90 active:bg-muted/75 text-muted-foreground hover:text-foreground active:text-foreground',
+    togglable:
+      'hover:bg-muted/55 data-[drag-over]:bg-muted/55 active:bg-muted/40 text-muted-foreground hover:text-foreground active:text-foreground',
+    toggled:
+      'bg-muted/90 data-[drag-over]:bg-muted/90 active:bg-muted/75 text-muted-foreground hover:text-foreground active:text-foreground',
   },
 }
 
 const staticStyles = {
   base: 'rounded p-5 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
   variant: {
-    danger:
-      'bg-card border-danger text-danger border [&>svg]:text-current',
-    default:
-      'bg-card border text-card-foreground',
+    danger: 'bg-card border-danger text-danger border [&>svg]:text-current',
+    default: 'bg-card border text-card-foreground',
   },
 }
 
@@ -46,7 +46,6 @@ const popoverStyles = {
   ],
 }
 
-const overlayStyles
-  = 'fixed inset-0 z-50 bg-overlay'
+const overlayStyles = 'fixed inset-0 z-50 bg-overlay'
 
 export { interactiveStyles, overlayStyles, popoverStyles, staticStyles }

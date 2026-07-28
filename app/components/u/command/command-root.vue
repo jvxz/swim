@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import type { ListboxRootEmits, ListboxRootProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
 import { useFilter, useForwardPropsEmits } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
+
 import { provideCommandContext } from '.'
 
-const props = withDefaults(defineProps<ListboxRootProps & { class?: HTMLAttributes['class'], doFiltering?: boolean }>(), {
-  doFiltering: true,
-  modelValue: '',
-})
+const props = withDefaults(
+  defineProps<ListboxRootProps & { class?: HTMLAttributes['class']; doFiltering?: boolean }>(),
+  {
+    doFiltering: true,
+    modelValue: '',
+  },
+)
 
 const emits = defineEmits<ListboxRootEmits>()
 
@@ -33,8 +37,7 @@ function filterItems() {
   if (!props.doFiltering) {
     filterState.filtered.count = allItems.value.size
     filterState.filtered.groups = new Set(allGroups.value.keys())
-    for (const [id] of allItems.value)
-      filterState.filtered.items.set(id, 1)
+    for (const [id] of allItems.value) filterState.filtered.items.set(id, 1)
 
     return
   }
@@ -55,8 +58,7 @@ function filterItems() {
   for (const [id, value] of allItems.value) {
     const score = contains(value, filterState.search)
     filterState.filtered.items.set(id, score ? 1 : 0)
-    if (score)
-      itemCount++
+    if (score) itemCount++
   }
 
   for (const [groupId, group] of allGroups.value) {
@@ -71,9 +73,12 @@ function filterItems() {
   filterState.filtered.count = itemCount
 }
 
-watch(() => [filterState.search, props.doFiltering], () => {
-  filterItems()
-})
+watch(
+  () => [filterState.search, props.doFiltering],
+  () => {
+    filterItems()
+  },
+)
 
 provideCommandContext({
   allGroups,

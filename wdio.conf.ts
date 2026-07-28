@@ -14,12 +14,14 @@ let tauriDriver: ChildProcess
 let exit = false
 
 export function getCapabilities() {
-  return [{
-    'maxInstances': 1,
-    'tauri:options': {
-      application: resolveAppBinaryPath(),
-    },
-  } as WebdriverIO.Capabilities]
+  return [
+    {
+      maxInstances: 1,
+      'tauri:options': {
+        application: resolveAppBinaryPath(),
+      },
+    } as WebdriverIO.Capabilities,
+  ]
 }
 
 export const config: WebdriverIO.Config = {
@@ -31,17 +33,16 @@ export const config: WebdriverIO.Config = {
     await browser.setTimeout({ script: 60000 })
 
     await browser.waitUntil(
-      async () => (await browser.execute(() => typeof window.__TAURI_INVOKE__ === 'function')) === true,
+      async () =>
+        (await browser.execute(() => typeof window.__TAURI_INVOKE__ === 'function')) === true,
       { interval: 100, timeout: 10000 },
     )
   },
   // ensure `tauri-driver` so webdriver requests are proxied
   beforeSession: () => {
-    tauriDriver = spawn(
-      path.resolve(os.homedir(), '.cargo', 'bin', 'tauri-driver'),
-      [],
-      { stdio: [null, process.stdout, process.stderr] },
-    )
+    tauriDriver = spawn(path.resolve(os.homedir(), '.cargo', 'bin', 'tauri-driver'), [], {
+      stdio: [null, process.stdout, process.stderr],
+    })
 
     tauriDriver.on('error', (error) => {
       console.error('tauri-driver error:', error)
@@ -64,15 +65,11 @@ export const config: WebdriverIO.Config = {
     ui: 'bdd',
   },
   onPrepare: () => {
-    spawnSync(
-      'bun',
-      ['run', 'tauri', 'build', '--debug', '--no-bundle'],
-      {
-        cwd: __dirname,
-        shell: true,
-        stdio: 'inherit',
-      },
-    )
+    spawnSync('bun', ['run', 'tauri', 'build', '--debug', '--no-bundle'], {
+      cwd: __dirname,
+      shell: true,
+      stdio: 'inherit',
+    })
   },
   port: 4444,
   reporters: ['spec'],
@@ -90,11 +87,9 @@ function resolveAppBinaryPath() {
   const preferred = debug
   const fallback = release
 
-  if (existsSync(preferred))
-    return preferred
+  if (existsSync(preferred)) return preferred
 
-  if (existsSync(fallback))
-    return fallback
+  if (existsSync(fallback)) return fallback
 
   return preferred
 }
@@ -103,8 +98,7 @@ function onShutdown(fn: () => void) {
   const cleanup = () => {
     try {
       fn()
-    }
-    finally {
+    } finally {
       process.exit()
     }
   }

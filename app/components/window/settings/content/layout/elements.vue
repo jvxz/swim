@@ -23,18 +23,22 @@ useDraggable(listEl, list, {
     list.value = initialList
     elementDraggingData.value = null
   },
-  onStart: evt => elementDraggingData.value = { element: evt.data, from: 'AVAILABLE_ELEMENTS' },
+  onStart: (evt) => (elementDraggingData.value = { element: evt.data, from: 'AVAILABLE_ELEMENTS' }),
   selectedClass: 'bg-blue-500',
   sort: false,
 })
 
-useStyleTag(computed(() => elementDraggingData.value && elementDraggingData.value.from !== 'AVAILABLE_ELEMENTS'
-  ? `
+useStyleTag(
+  computed(() =>
+    elementDraggingData.value && elementDraggingData.value.from !== 'AVAILABLE_ELEMENTS'
+      ? `
   .sortable-ghost-item {
     display: none !important;
   }
 `
-  : ''))
+      : '',
+  ),
+)
 </script>
 
 <template>
@@ -60,10 +64,12 @@ useStyleTag(computed(() => elementDraggingData.value && elementDraggingData.valu
         :key="element.key"
         variant="ghost"
         draggable="true"
-
         class="rounded-r-none duration-0 transition-none justify-start active:text-muted-foreground active:bg-inherit"
       >
-        <Icon name="tabler:grip-vertical" class="size-3.5!" />
+        <Icon
+          name="tabler:grip-vertical"
+          class="size-3.5!"
+        />
         <p>{{ element.label }}</p>
       </UButton>
     </div>

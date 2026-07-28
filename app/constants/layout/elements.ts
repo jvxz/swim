@@ -3,7 +3,14 @@ interface LayoutElement {
   label: string
 }
 
-export const layoutPanelElementKeys = ['coverArt', 'libraryView', 'metadataView', 'player', 'trackList', 'console'] as const
+export const layoutPanelElementKeys = [
+  'coverArt',
+  'libraryView',
+  'metadataView',
+  'player',
+  'trackList',
+  'console',
+] as const
 
 export const layoutPanelElements: LayoutElement[] = [
   {
@@ -104,4 +111,5 @@ export const defaultLayoutElementSettings = {
 
 export type LayoutElementKey = (typeof layoutPanelElementKeys)[number]
 
-export type LayoutElementSetting<T extends LayoutElementKey = LayoutElementKey> = LayoutElementSettings[T]
+export type LayoutElementSetting<T extends LayoutElementKey = LayoutElementKey> =
+  LayoutElementSettings[T]

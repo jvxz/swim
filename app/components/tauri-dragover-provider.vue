@@ -20,11 +20,9 @@ const elRef = shallowRef<HTMLElement | null>(null)
 
 const isOver = computed(() => {
   const isAcceptable = () => {
-    if (!props.acceptableKeys)
-      return true
+    if (!props.acceptableKeys) return true
 
-    if (dragMeta.value === null)
-      return false
+    if (dragMeta.value === null) return false
 
     if (Array.isArray(props.acceptableKeys))
       return props.acceptableKeys.includes(dragMeta.value?.key)
@@ -32,31 +30,25 @@ const isOver = computed(() => {
     return props.acceptableKeys === dragMeta.value?.key
   }
 
-  if (!$dragHandler.isDragging.value || !isAcceptable())
-    return false
+  if (!$dragHandler.isDragging.value || !isAcceptable()) return false
 
   return checkMatch()
 })
 
 watch(isOver, () => {
-  if (isOver.value)
-    emits('over')
-
-  else
-    emits('leave')
+  if (isOver.value) emits('over')
+  else emits('leave')
 })
 
 watch($dragHandler.droppedItemPaths, () => {
-  if (checkMatch())
-    emits('drop', $dragHandler.droppedItemPaths.value, dragMeta.value)
+  if (checkMatch()) emits('drop', $dragHandler.droppedItemPaths.value, dragMeta.value)
 })
 
 function checkMatch() {
   const target = $dragHandler.overElement.value
   const container = unrefElement(elRef)
 
-  if (!target || !container)
-    return false
+  if (!target || !container) return false
 
   return container === target || container.contains(target)
 }
@@ -70,7 +62,10 @@ function checkMatch() {
     tabindex="-1"
   >
     <RekaSlot :data-drag-over="isOver ? '' : undefined">
-      <slot :is-over :drag-meta />
+      <slot
+        :is-over
+        :drag-meta
+      />
     </RekaSlot>
   </div>
 </template>

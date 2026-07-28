@@ -1,5 +1,6 @@
-import type { z } from 'zod'
 import { fetch } from '@tauri-apps/plugin-http'
+import type { z } from 'zod'
+
 import { LastFmUserGetInfoResponseSchema } from './lastfm/schema'
 
 type LastFmFetchMethod = keyof LastFmFetchQuery
@@ -19,7 +20,10 @@ interface LastFmFetchOptions<T extends LastFmFetchMethod> {
   query: Omit<LastFmFetchQuery[T], 'method'>
 }
 
-export async function $lastfm<T extends LastFmFetchMethod>(method: T, opts: LastFmFetchOptions<T>): Promise<z.ZodSafeParseResult<z.infer<typeof LAST_FM_RESPONSE_SCHEMAS[T]>>> {
+export async function $lastfm<T extends LastFmFetchMethod>(
+  method: T,
+  opts: LastFmFetchOptions<T>,
+): Promise<z.ZodSafeParseResult<z.infer<(typeof LAST_FM_RESPONSE_SCHEMAS)[T]>>> {
   const params = new URLSearchParams({
     api_key: import.meta.env.VITE_LAST_FM_API_KEY,
     format: 'json',
@@ -32,7 +36,10 @@ export async function $lastfm<T extends LastFmFetchMethod>(method: T, opts: Last
   })
 
   if (!response.ok) {
-    emitError({ data: `Failed to reach Last.fm servers: ${response.statusText} (${response.status})`, type: 'LastFm' })
+    emitError({
+      data: `Failed to reach Last.fm servers: ${response.statusText} (${response.status})`,
+      type: 'LastFm',
+    })
     throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   }
 

@@ -9,6 +9,9 @@ defineProps<{
     <UContextMenuTrigger as-child>
       <slot />
     </UContextMenuTrigger>
-    <TrackListEntryContextMenuContent v-if="entries" :entries />
+    <TrackListEntryContextMenuContent
+      v-if="entries"
+      :entries
+    />
   </UContextMenu>
 </template>

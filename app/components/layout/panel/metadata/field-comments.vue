@@ -8,7 +8,11 @@ const height = shallowRef(settings.layout.element.metadataView.frameCommHeight)
 
 const textarea = useTemplateRef<HTMLTextAreaElement>('textarea')
 const { height: elHeight } = useElementSize(textarea)
-watchDebounced(elHeight, height => settings.layout.element.metadataView.frameCommHeight = height, { debounce: 200 })
+watchDebounced(
+  elHeight,
+  (height) => (settings.layout.element.metadataView.frameCommHeight = height),
+  { debounce: 200 },
+)
 
 const { proposedFrameChanges, proposedMixedFrames } = useMetadataStore()!
 

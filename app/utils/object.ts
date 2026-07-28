@@ -29,7 +29,10 @@ export type ObjectEntries<O extends Record<string, any>> = Exclude<
 >[]
 
 type ArrayOwnKeys<Type extends readonly unknown[]> = Exclude<keyof Type, keyof unknown[]>
-type ArrayOwnStringKeys<Type extends readonly unknown[]> = Extract<ArrayOwnKeys<Type>, string | number>
+type ArrayOwnStringKeys<Type extends readonly unknown[]> = Extract<
+  ArrayOwnKeys<Type>,
+  string | number
+>
 type ArrayEntryValue<Type extends readonly unknown[]> = number extends Type['length']
   ? Type[number] | Type[ArrayOwnStringKeys<Type>]
   : Type[ArrayOwnStringKeys<Type>]

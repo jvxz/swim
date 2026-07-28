@@ -3,24 +3,24 @@ const { playlists } = useUserPlaylists()
 
 type TreeItem = Prettify<
   | {
-    title: string
-    type: 'folder' | 'item'
-    icon?: string
-    children?: TreeItem[]
-    onClick?: () => void
-  }
-  | Selectable<DB['playlists']> & {
-    title: string
-    type: 'playlist'
-    icon?: string
-    children?: TreeItem[]
-  }
-  | Selectable<DB['library_folders']> & {
-    title: string
-    type: 'libraryFolder'
-    icon?: string
-    children?: TreeItem[]
-  }
+      title: string
+      type: 'folder' | 'item'
+      icon?: string
+      children?: TreeItem[]
+      onClick?: () => void
+    }
+  | (Selectable<DB['playlists']> & {
+      title: string
+      type: 'playlist'
+      icon?: string
+      children?: TreeItem[]
+    })
+  | (Selectable<DB['library_folders']> & {
+      title: string
+      type: 'libraryFolder'
+      icon?: string
+      children?: TreeItem[]
+    })
 >
 
 const { createPlaylist, deletePlaylist, renamePlaylist } = useUserPlaylists()
@@ -28,8 +28,7 @@ const { getLibraryFolders } = useLibrary()
 const { data: folders } = getLibraryFolders()
 
 function handleRenameSubmit(playlistId: number, name: string | null | undefined) {
-  if (!name)
-    return
+  if (!name) return
 
   renamePlaylist(playlistId, name)
 }
@@ -60,7 +59,7 @@ const treeItems = computed<TreeItem[]>(() => [
     type: 'item',
   },
   {
-    children: playlists.value.map(playlist => ({
+    children: playlists.value.map((playlist) => ({
       title: playlist.name,
       ...playlist,
       type: 'playlist',
@@ -69,7 +68,7 @@ const treeItems = computed<TreeItem[]>(() => [
     type: 'folder',
   },
   {
-    children: folders.value?.map(folder => ({
+    children: folders.value?.map((folder) => ({
       title: folder.path,
       ...folder,
       type: 'libraryFolder',
@@ -95,7 +94,7 @@ const treeItems = computed<TreeItem[]>(() => [
         >
           <TreeItem
             v-for="item in flattenItems"
-            v-slot=" { isExpanded, isSelected }"
+            v-slot="{ isExpanded, isSelected }"
             :key="item._id"
             v-bind="item.bind"
             as-child
@@ -126,7 +125,7 @@ const treeItems = computed<TreeItem[]>(() => [
                 class="group block"
                 :acceptable-keys="['track-list-entry', 'UNKNOWN']"
                 @over="handleDragOver(item._id)"
-                @leave="() => shouldOpen = false"
+                @leave="() => (shouldOpen = false)"
               >
                 <UButton
                   variant="togglable"
@@ -145,13 +144,15 @@ const treeItems = computed<TreeItem[]>(() => [
             </template>
             <template v-else-if="item.value.type === 'item'">
               <UButton
-                :variant="item.value.title === 'Library'
-                  ? isLibrarySelected
-                    ? 'toggled'
-                    : 'togglable'
-                  : isSelected
-                    ? 'toggled'
-                    : 'togglable'"
+                :variant="
+                  item.value.title === 'Library'
+                    ? isLibrarySelected
+                      ? 'toggled'
+                      : 'togglable'
+                    : isSelected
+                      ? 'toggled'
+                      : 'togglable'
+                "
                 class="text-foreground w-full justify-start"
                 @click="item.value.onClick?.()"
               >

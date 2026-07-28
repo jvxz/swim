@@ -7,15 +7,13 @@ const isAuthDialogOpen = shallowRef(false)
 const isCompletingAuth = shallowRef(false)
 
 async function handleStartAuth() {
-  if (isAuthDialogOpen.value || lastFm.lastFmProfile)
-    return
+  if (isAuthDialogOpen.value || lastFm.lastFmProfile) return
 
   isAuthDialogOpen.value = true
 
   try {
     token.value = await startAuth()
-  }
-  catch (error) {
+  } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
     emitError({ data: errorMsg, type: 'LastFm' })
     isAuthDialogOpen.value = false
@@ -23,18 +21,18 @@ async function handleStartAuth() {
 }
 
 async function handleCompleteAuth() {
-  if (!token.value)
-    return
+  if (!token.value) return
 
   isCompletingAuth.value = true
 
   try {
     await completeAuth(token.value)
-  }
-  catch {
-    emitError({ data: 'Failed to complete authentication. Did you complete the process in the new tab before continuing?', type: 'LastFm' })
-  }
-  finally {
+  } catch {
+    emitError({
+      data: 'Failed to complete authentication. Did you complete the process in the new tab before continuing?',
+      type: 'LastFm',
+    })
+  } finally {
     isAuthDialogOpen.value = false
     token.value = null
     isCompletingAuth.value = false
@@ -45,12 +43,13 @@ const { isOnline } = useNetwork()
 </script>
 
 <template>
-  <WindowSettingsContentTabLayout title="Last.fm" class="flex *:h-full">
+  <WindowSettingsContentTabLayout
+    title="Last.fm"
+    class="flex *:h-full"
+  >
     <div class="flex flex-col gap-2 w-full items-center">
       <div class="flex gap-2 w-full items-center">
-        <ULabel for="doScrobbling">
-          Enable scrobbling
-        </ULabel>
+        <ULabel for="doScrobbling"> Enable scrobbling </ULabel>
         <USwitch
           id="doScrobbling"
           v-model="$settings.lastFm.doScrobbling"
@@ -58,9 +57,7 @@ const { isOnline } = useNetwork()
         />
       </div>
       <div class="flex gap-2 w-full items-center">
-        <ULabel for="doOfflineScrobbling">
-          Update "now playing" status
-        </ULabel>
+        <ULabel for="doOfflineScrobbling"> Update "now playing" status </ULabel>
         <USwitch
           id="doNowPlayingUpdates"
           v-model="$settings.lastFm.doNowPlayingUpdates"
@@ -68,9 +65,7 @@ const { isOnline } = useNetwork()
         />
       </div>
       <div class="flex gap-2 w-full items-center">
-        <ULabel for="doOfflineScrobbling">
-          Enable offline scrobbling
-        </ULabel>
+        <ULabel for="doOfflineScrobbling"> Enable offline scrobbling </ULabel>
         <USwitch
           id="doOfflineScrobbling"
           v-model="$settings.lastFm.doOfflineScrobbling"
@@ -82,9 +77,7 @@ const { isOnline } = useNetwork()
       <template v-if="!isOnline">
         <!-- <div class="flex items-center justify-around gap-2 text-muted-foreground"> -->
         <div class="text-muted-foreground flex flex-col items-end justify-around">
-          <p class="italic">
-            You are currently offline
-          </p>
+          <p class="italic">You are currently offline</p>
           <UButton
             class="w-fit"
             :disabled="true"
@@ -102,8 +95,13 @@ const { isOnline } = useNetwork()
             </UHoverCardContent>
           </UHoverCardRoot> -->
         </div>
-        <div class="border border-muted rounded-sm border-dashed grid size-[72px] place-items-center">
-          <Icon name="tabler:wifi-off" class="text-muted-foreground size-6!" />
+        <div
+          class="border border-muted rounded-sm border-dashed grid size-[72px] place-items-center"
+        >
+          <Icon
+            name="tabler:wifi-off"
+            class="text-muted-foreground size-6!"
+          />
         </div>
       </template>
       <template v-else-if="lastFm.lastFmProfilePending">
@@ -121,7 +119,9 @@ const { isOnline } = useNetwork()
       </template>
       <template v-else-if="lastFm.lastFmProfile">
         <div class="flex flex-col items-end justify-around">
-          <p>Signed in as <span class="font-bold">{{ lastFm.lastFmProfile.name }}</span></p>
+          <p>
+            Signed in as <span class="font-bold">{{ lastFm.lastFmProfile.name }}</span>
+          </p>
           <UButton
             class="w-fit"
             variant="danger"
@@ -136,7 +136,7 @@ const { isOnline } = useNetwork()
           width="72"
           height="72"
           class="rounded-sm"
-        >
+        />
       </template>
       <template v-else>
         <div class="flex flex-col items-end justify-around">
@@ -153,7 +153,8 @@ const { isOnline } = useNetwork()
             </UAlertDialogTrigger>
             <UAlertDialogContent>
               <p class="text-sm">
-                You are about to be directed to a new tab in your browser. Click button below once you have completed the authentication process.
+                You are about to be directed to a new tab in your browser. Click button below once
+                you have completed the authentication process.
               </p>
               <UAlertDialogFooter>
                 <UButton

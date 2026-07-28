@@ -16,7 +16,7 @@ export function useTrackListInput() {
 
   const state = useState<TrackListInput>('track-list-input', () => newData ?? defaultData)
 
-  watch(state, newData => tauri.store.set('track-list-directory', newData))
+  watch(state, (newData) => tauri.store.set('track-list-directory', newData))
 
   return state
 }
@@ -34,10 +34,8 @@ export function useTrackList() {
     }, null)
 
     useTrackListRefresh.on(({ keys }) => {
-      if (keys.includes(key.value))
-        asyncState.execute(0, true)
-
-      else keys.forEach(k => trackData.trackListCache.delete(k))
+      if (keys.includes(key.value)) asyncState.execute(0, true)
+      else keys.forEach((k) => trackData.trackListCache.delete(k))
     })
 
     watch(key, () => asyncState.execute(0, true))
@@ -45,8 +43,7 @@ export function useTrackList() {
     const data = computed<TrackListEntry[]>((prev) => {
       const refs = trackData.trackListCache.get(key.value)
 
-      if (!refs)
-        return prev ?? []
+      if (!refs) return prev ?? []
 
       const fullTracks = refs.map((ref) => {
         const fileEntry = trackData.trackCache.get(ref.path)
@@ -73,14 +70,13 @@ export function useTrackList() {
     const key = createTrackListInputKey(input)
 
     const cachedEntries = trackData.trackListCache.get(key)
-    if (cachedEntries && !fresh)
-      return cachedEntries
+    if (cachedEntries && !fresh) return cachedEntries
 
     let tracks: TrackListEntry[] = []
 
     switch (input.type) {
       case 'folder': {
-        tracks = (await trackData.getFolderTracks(input.path)).map(entry => ({
+        tracks = (await trackData.getFolderTracks(input.path)).map((entry) => ({
           ...entry,
           is_playlist_track: false as const,
         }))

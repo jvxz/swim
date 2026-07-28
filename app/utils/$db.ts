@@ -5,7 +5,7 @@ import { TauriSqliteDialect } from 'kysely-dialect-tauri'
 
 const db = new Kysely<DB>({
   dialect: new TauriSqliteDialect({
-    database: async prefix => Database.load(`${prefix}${await appDataDir()}/swim.db`),
+    database: async (prefix) => Database.load(`${prefix}${await appDataDir()}/swim.db`),
   }),
 })
 

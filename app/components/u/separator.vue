@@ -2,9 +2,7 @@
 import type { SeparatorProps } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
 
-const props = withDefaults(defineProps<
-  SeparatorProps & { class?: HTMLAttributes['class'] }
->(), {
+const props = withDefaults(defineProps<SeparatorProps & { class?: HTMLAttributes['class'] }>(), {
   decorative: true,
   orientation: 'horizontal',
 })

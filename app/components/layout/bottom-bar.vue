@@ -1,6 +1,9 @@
 <template>
   <div class="border-t h-fit">
-    <LayoutPanelSplitterGroup panel-key="bottom" direction="horizontal">
+    <LayoutPanelSplitterGroup
+      panel-key="bottom"
+      direction="horizontal"
+    >
       <LayoutPanel
         v-for="(element, idx) in $settings.layout.panel.bottom.elements"
         :key="element"

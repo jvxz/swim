@@ -28,9 +28,9 @@
     }
   },
   "build": {
-    "beforeBuildCommand": "bun run generate",
+    "beforeBuildCommand": "vp run generate",
     "frontendDist": "../dist",
-    "beforeDevCommand": "bun run db:types && bun run nuxt:dev",
+    "beforeDevCommand": "vp run db:types && vp run nuxt:dev",
     "devUrl": "http://localhost:3000"
   },
   "productName": "swim",

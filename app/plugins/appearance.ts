@@ -4,7 +4,9 @@ export default defineNuxtPlugin({
   setup: () => {
     const settings = useSettings()
 
-    const styles = refDebounced(toRef(() => `
+    const styles = refDebounced(
+      toRef(
+        () => `
       html {
         font-size: calc(${settings.appearance.ui.scale} * 16px);
       }
@@ -30,7 +32,10 @@ export default defineNuxtPlugin({
         --spacing: calc(0.1875rem + (${settings.appearance.ui.spacing} * 0.125rem));
         --radius: ${settings.appearance.ui.cornerRadius}rem;
       }
-    `), 750)
+    `,
+      ),
+      750,
+    )
 
     useStyleTag(styles)
   },

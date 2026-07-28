@@ -7,12 +7,7 @@ const props = defineProps<{
 <template>
   <div
     data-slot="card"
-    :class="cn(
-      staticStyles.base,
-      staticStyles.variant.default,
-      'flex flex-col gap-5',
-      props.class,
-    )"
+    :class="cn(staticStyles.base, staticStyles.variant.default, 'flex flex-col gap-5', props.class)"
   >
     <slot />
   </div>

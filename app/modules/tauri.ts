@@ -13,10 +13,18 @@ function capitalize(name: string) {
 
 const tauriModules = [
   { importPath: '@tauri-apps/api/app', module: tauriApp, prefix: 'App' },
-  { importPath: '@tauri-apps/api/webviewWindow', module: tauriWebviewWindow, prefix: 'WebviewWindow' },
+  {
+    importPath: '@tauri-apps/api/webviewWindow',
+    module: tauriWebviewWindow,
+    prefix: 'WebviewWindow',
+  },
   { importPath: '@tauri-apps/plugin-shell', module: tauriShell, prefix: 'Shell' },
   { importPath: '@tauri-apps/plugin-os', module: tauriOs, prefix: 'Os' },
-  { importPath: '@tauri-apps/plugin-notification', module: tauriNotification, prefix: 'Notification' },
+  {
+    importPath: '@tauri-apps/plugin-notification',
+    module: tauriNotification,
+    prefix: 'Notification',
+  },
   { importPath: '@tauri-apps/plugin-fs', module: tauriFs, prefix: 'Fs' },
   { importPath: '@tauri-apps/plugin-store', module: tauriStore, prefix: 'Store' },
 ]
@@ -31,11 +39,13 @@ export default defineNuxtModule<ModuleOptions>({
   },
   setup(options) {
     tauriModules.forEach(({ importPath, module, prefix }) => {
-      Object.keys(module).filter(name => name !== 'default').forEach((name) => {
-        const prefixedName = `${options.prefix}${prefix}` || ''
-        const as = prefixedName ? prefixedName + capitalize(name) : name
-        addImports({ as, from: importPath, name })
-      })
+      Object.keys(module)
+        .filter((name) => name !== 'default')
+        .forEach((name) => {
+          const prefixedName = `${options.prefix}${prefix}` || ''
+          const as = prefixedName ? prefixedName + capitalize(name) : name
+          addImports({ as, from: importPath, name })
+        })
     })
   },
 })

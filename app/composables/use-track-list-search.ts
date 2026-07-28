@@ -1,15 +1,18 @@
-import type { FuseResult } from 'fuse.js'
 import { useFuse } from '@vueuse/integrations/useFuse'
+import type { FuseResult } from 'fuse.js'
 
 export const useTrackListSearchQuery = createGlobalState(() => {
   const query = ref('')
 
-  useRouter().afterEach(() => query.value = '')
+  useRouter().afterEach(() => (query.value = ''))
 
   return query
 })
 
-export function useTrackListSearch(entries: Ref<TrackListEntry[]>, input: MaybeRefOrGetter<TrackListInput>) {
+export function useTrackListSearch(
+  entries: Ref<TrackListEntry[]>,
+  input: MaybeRefOrGetter<TrackListInput>,
+) {
   const query = useTrackListSearchQuery()
 
   const { fuse, results: fuseResults } = useFuse(query, entries, {
@@ -19,10 +22,12 @@ export function useTrackListSearch(entries: Ref<TrackListEntry[]>, input: MaybeR
     },
   })
 
-  const results = computed(() => query.value ? resultsToEntries(fuseResults.value) : entries.value)
+  const results = computed(() =>
+    query.value ? resultsToEntries(fuseResults.value) : entries.value,
+  )
 
   function resultsToEntries(results: FuseResult<TrackListEntry>[]): TrackListEntry[] {
-    const mappedEntries = results.map(result => result.item)
+    const mappedEntries = results.map((result) => result.item)
 
     return sortTrackList(mappedEntries, toValue(input))
   }

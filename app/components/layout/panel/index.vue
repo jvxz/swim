@@ -2,14 +2,19 @@
 import type { SplitterPanelEmits, SplitterPanelProps } from 'reka-ui'
 import { useForwardPropsEmits } from 'reka-ui'
 
-const props = withDefaults(defineProps<{
-  element: LayoutElementKey
-  asSplitterPanel?: boolean
-  withResizeHandle?: boolean
-} & SplitterPanelProps>(), {
-  asSplitterPanel: true,
-  minSize: 7.5,
-})
+const props = withDefaults(
+  defineProps<
+    {
+      element: LayoutElementKey
+      asSplitterPanel?: boolean
+      withResizeHandle?: boolean
+    } & SplitterPanelProps
+  >(),
+  {
+    asSplitterPanel: true,
+    minSize: 7.5,
+  },
+)
 
 const emits = defineEmits<SplitterPanelEmits>()
 const forwarded = useForwardPropsEmits(props, emits)

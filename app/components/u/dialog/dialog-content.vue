@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DialogContentEmits, DialogContentProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
 import { useForwardPropsEmits } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
 
 const props = defineProps<DialogContentProps & { class?: HTMLAttributes['class'] }>()
 const emits = defineEmits<DialogContentEmits>()
@@ -13,9 +13,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
 <template>
   <DialogPortal>
-    <DialogOverlay
-      :class="cn(overlayStyles)"
-    />
+    <DialogOverlay :class="cn(overlayStyles)" />
     <DialogContent
       v-bind="forwarded"
       data-slot="dialog-content"
@@ -25,19 +23,25 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
           staticStyles.variant.default,
           'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50.5%] gap-4 bg-background',
           props.class,
-        )"
+        )
+      "
     >
       <slot />
 
       <DialogClose
-        :class="cn(
-          interactiveStyles.base,
-          interactiveStyles.variant.ghost,
-          interactiveStyles.size.icon,
-          'absolute top-3 right-3 inline-flex size-6 items-center justify-center opacity-70',
-        )"
+        :class="
+          cn(
+            interactiveStyles.base,
+            interactiveStyles.variant.ghost,
+            interactiveStyles.size.icon,
+            'absolute top-3 right-3 inline-flex size-6 items-center justify-center opacity-70',
+          )
+        "
       >
-        <Icon name="tabler:x" class="size-4" />
+        <Icon
+          name="tabler:x"
+          class="size-4"
+        />
         <span class="sr-only">Close</span>
       </DialogClose>
     </DialogContent>

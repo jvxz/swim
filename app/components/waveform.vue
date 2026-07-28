@@ -12,10 +12,14 @@ const waveformGroups = shallowRef<number[][]>([])
 const HEIGHT_RATIO = 0.7
 const TARGET_BINS = canvasContainerSize.width
 
-const { execute: getWaveform, state: waveformData } = useAsyncState(async () => props.path && await $invoke(commands.getWaveform, props.path, 2048), [], {
-  immediate: true,
-  shallow: true,
-})
+const { execute: getWaveform, state: waveformData } = useAsyncState(
+  async () => props.path && (await $invoke(commands.getWaveform, props.path, 2048)),
+  [],
+  {
+    immediate: true,
+    shallow: true,
+  },
+)
 
 onMounted(() => {
   const canvas = unrefElement(canvasRef.value)!
@@ -29,8 +33,7 @@ onMounted(() => {
 })
 
 watch([canvasContainerSize.width, canvasContainerSize.height], () => {
-  if (!waveformData.value)
-    return
+  if (!waveformData.value) return
 
   const canvas = unrefElement(canvasRef.value)!
   const container = unrefElement(canvasContainer.value)!
@@ -41,23 +44,23 @@ watch([canvasContainerSize.width, canvasContainerSize.height], () => {
   repaintWaveform(canvas, waveformData.value)
 })
 
-watch(() => props.path, async () => {
-  if (!props.path)
-    return
+watch(
+  () => props.path,
+  async () => {
+    if (!props.path) return
 
-  const canvas = unrefElement(canvasRef.value)!
-  resetWaveform(canvas)
-  await getWaveform()
-})
+    const canvas = unrefElement(canvasRef.value)!
+    resetWaveform(canvas)
+    await getWaveform()
+  },
+)
 
 watch(waveformData, async (wf) => {
-  if (!wf)
-    return
+  if (!wf) return
 
   await until(canvasRef).toBeTruthy()
   const canvas = unrefElement(canvasRef.value)
-  if (!canvas)
-    return
+  if (!canvas) return
 
   drawWaveform(canvas, wf)
 })
@@ -91,8 +94,7 @@ function drawWaveform(canvas: HTMLCanvasElement, wf: number[]) {
   const middle = canvas.height / 2
 
   for (const group of groups) {
-    if (!groups)
-      break
+    if (!groups) break
 
     const x = groups.indexOf(group)
 
@@ -124,6 +126,6 @@ function repaintWaveform(canvas: HTMLCanvasElement, wf: number[]) {
     ref="canvasRef"
     :class="props.class"
     v-bind="$attrs"
-    style="image-rendering: pixelated;"
+    style="image-rendering: pixelated"
   />
 </template>

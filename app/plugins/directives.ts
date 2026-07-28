@@ -19,8 +19,7 @@ export default defineNuxtPlugin({
     vueApp.directive('esc-blur', {
       mounted(el: HTMLElement) {
         useEventListener('keydown', (e) => {
-          if (e.key === 'Escape')
-            el.blur()
+          if (e.key === 'Escape') el.blur()
         })
       },
     })

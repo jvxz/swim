@@ -1,11 +1,14 @@
 <script lang="ts" setup>
-const props = withDefaults(defineProps<{
-  duration?: number
-  color?: string
-}>(), {
-  color: 'white',
-  duration: 5,
-})
+const props = withDefaults(
+  defineProps<{
+    duration?: number
+    color?: string
+  }>(),
+  {
+    color: 'white',
+    duration: 5,
+  },
+)
 
 const emit = defineEmits<{
   onComplete: []

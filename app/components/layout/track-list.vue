@@ -1,17 +1,26 @@
 <script lang="ts" setup>
-import type { TrackListInput } from '~/types'
 import { OnClickOutside } from '@vueuse/components'
 
-const props = defineProps<TrackListInput & {
-  forceVirtualize?: boolean
-}>()
+import type { TrackListInput } from '~/types'
+
+const props = defineProps<
+  TrackListInput & {
+    forceVirtualize?: boolean
+  }
+>()
 
 const keys = useGlobalKeys()
 const { getTrackList } = useTrackList()
 const { playbackStatus, playTrack } = usePlayback()
 const { layoutPanels: playlistHeaderPercents } = useTrackListColumns()
 const { isUpdatingPlayCount } = usePlayCount()
-const { checkIsSelected, clearSelectedTracks, editTrackSelection, selectedTrackData, selectedTrackDataEntries } = useTrackSelection()
+const {
+  checkIsSelected,
+  clearSelectedTracks,
+  editTrackSelection,
+  selectedTrackData,
+  selectedTrackDataEntries,
+} = useTrackSelection()
 const settings = useSettings()
 
 const { getColumnFields } = useTrackListColumns()
@@ -25,7 +34,9 @@ let entryToSelectInsteadOfDrag: TrackListEntry | null = null
 let shouldSelectOrDeselect: 'select' | 'deselect' = 'select'
 let wasMouseDownOnTrackRow = false
 
-const shouldVirtualize = computed(() => folderEntries.value.length >= TRACK_LIST_VIRTUALIZATION_THRESHOLD)
+const shouldVirtualize = computed(
+  () => folderEntries.value.length >= TRACK_LIST_VIRTUALIZATION_THRESHOLD,
+)
 
 const contextMenuEntries = shallowRef<TrackListEntry[] | null>(null)
 
@@ -34,9 +45,7 @@ useEventListener('mouseup', () => {
   allowRowDragStart = false
 
   if (!isDraggingEntries && entryToSelectInsteadOfDrag) {
-    if (keys.ctrl?.value)
-      editTrackSelection('deselect', entryToSelectInsteadOfDrag)
-
+    if (keys.ctrl?.value) editTrackSelection('deselect', entryToSelectInsteadOfDrag)
     else {
       clearSelectedTracks()
       editTrackSelection('select', entryToSelectInsteadOfDrag)
@@ -53,36 +62,34 @@ const { startDrag } = useDrag()
 async function handleRowDragStart(e: DragEvent, wasEntrySelected: boolean) {
   e.preventDefault()
 
-  if (!allowRowDragStart)
-    return
+  if (!allowRowDragStart) return
 
   entryToSelectInsteadOfDrag = null
 
   if (wasEntrySelected) {
     isDraggingEntries = true
-    await startDrag({
-      data: {
-        entries: selectedTrackData.value.entries,
+    await startDrag(
+      {
+        data: {
+          entries: selectedTrackData.value.entries,
+        },
+        key: 'track-list-entry',
       },
-      key: 'track-list-entry',
-    }, {
-      item: selectedTrackData.value.entries.map(entry => entry.path),
-    })
+      {
+        item: selectedTrackData.value.entries.map((entry) => entry.path),
+      },
+    )
   }
 }
 
 async function handleSelectDragStart(entryTriggeredFrom: TrackListEntry) {
-  if (wasMouseDownOnTrackRow)
-    return
+  if (wasMouseDownOnTrackRow) return
 
   const isEntryTriggeredFromSelected = checkIsSelected(entryTriggeredFrom)
 
   if (!isEntryTriggeredFromSelected) {
-    if (keys.ctrl?.value)
-      editTrackSelection('select', entryTriggeredFrom)
-
-    else if (!keys.shift?.value)
-      clearSelectedTracks()
+    if (keys.ctrl?.value) editTrackSelection('select', entryTriggeredFrom)
+    else if (!keys.shift?.value) clearSelectedTracks()
   }
 
   if (isEntryTriggeredFromSelected) {
@@ -91,29 +98,33 @@ async function handleSelectDragStart(entryTriggeredFrom: TrackListEntry) {
     return
   }
 
-  if (keys.shift?.value && !isEntryTriggeredFromSelected && selectedTrackData.value.entries.length) {
-    const idx = folderEntries.value.findIndex(entry => entry.path === entryTriggeredFrom.path)
+  if (
+    keys.shift?.value &&
+    !isEntryTriggeredFromSelected &&
+    selectedTrackData.value.entries.length
+  ) {
+    const idx = folderEntries.value.findIndex((entry) => entry.path === entryTriggeredFrom.path)
     if (idx !== -1) {
-      const lastSelectedEntryIndex = folderEntries.value.findIndex(entry => entry.path === selectedTrackData.value.entries.at(-1)!.path)
+      const lastSelectedEntryIndex = folderEntries.value.findIndex(
+        (entry) => entry.path === selectedTrackData.value.entries.at(-1)!.path,
+      )
 
       if (idx >= lastSelectedEntryIndex) {
-        const newEntries = folderEntries.value.slice(
-          lastSelectedEntryIndex,
-          idx,
-        )
+        const newEntries = folderEntries.value.slice(lastSelectedEntryIndex, idx)
         selectedTrackDataEntries.value = [...selectedTrackData.value.entries, ...newEntries]
-      }
-      else {
+      } else {
         const newEntries = folderEntries.value.slice(
           idx,
-          folderEntries.value.findIndex(entry => entry.path === selectedTrackData.value.entries[0]!.path),
+          folderEntries.value.findIndex(
+            (entry) => entry.path === selectedTrackData.value.entries[0]!.path,
+          ),
         )
         selectedTrackDataEntries.value = [...newEntries, ...selectedTrackData.value.entries]
       }
     }
   }
 
-  shouldSelectOrDeselect = (keys.shift?.value && isEntryTriggeredFromSelected) ? 'deselect' : 'select'
+  shouldSelectOrDeselect = keys.shift?.value && isEntryTriggeredFromSelected ? 'deselect' : 'select'
   wasMouseDownOnTrackRow = true
 
   editTrackSelection(shouldSelectOrDeselect, entryTriggeredFrom)
@@ -121,8 +132,7 @@ async function handleSelectDragStart(entryTriggeredFrom: TrackListEntry) {
 }
 
 async function handleDragHoverSelect(entryToEdit: TrackListEntry) {
-  if (!wasMouseDownOnTrackRow)
-    return
+  if (!wasMouseDownOnTrackRow) return
 
   editTrackSelection(shouldSelectOrDeselect, entryToEdit)
 }
@@ -130,14 +140,18 @@ async function handleDragHoverSelect(entryToEdit: TrackListEntry) {
 function handleRightClick(entry: TrackListEntry) {
   const clickedOnSelectedTrack = checkIsSelected(entry)
 
-  if (!clickedOnSelectedTrack || !selectedTrackData.value.entries.length || selectedTrackData.value.entries.length === 1)
+  if (
+    !clickedOnSelectedTrack ||
+    !selectedTrackData.value.entries.length ||
+    selectedTrackData.value.entries.length === 1
+  )
     selectedTrackDataEntries.value = [entry]
 }
 
-const columnFieldsKey = computed(() => columnFields.value.map(field => field.key).join())
+const columnFieldsKey = computed(() => columnFields.value.map((field) => field.key).join())
 
-onKeyStrokeSafe('ctrl_a', () => selectedTrackDataEntries.value = folderEntries.value)
-onKeyStrokeSafe('ctrl_d', () => selectedTrackDataEntries.value = [])
+onKeyStrokeSafe('ctrl_a', () => (selectedTrackDataEntries.value = folderEntries.value))
+onKeyStrokeSafe('ctrl_d', () => (selectedTrackDataEntries.value = []))
 
 const scrollY = shallowRef(0)
 
@@ -149,8 +163,7 @@ syncRefs(nonVirtualScrollY, scrollY)
 const { scrollStateMap } = useTrackListScrollState()
 const { path: routePath } = useRoute()
 onBeforeRouteLeave(() => {
-  if (settings.layout.element.trackList.persistScroll)
-    scrollStateMap.set(routePath, scrollY.value)
+  if (settings.layout.element.trackList.persistScroll) scrollStateMap.set(routePath, scrollY.value)
 })
 
 onMounted(() => {
@@ -174,7 +187,9 @@ onMounted(() => {
       :is-loading="isLoadingPlaylistData"
     />
 
-    <OnClickOutside @trigger="settings.general.clickOutsideToDeselect ? clearSelectedTracks() : null">
+    <OnClickOutside
+      @trigger="settings.general.clickOutsideToDeselect ? clearSelectedTracks() : null"
+    >
       <LayoutTrackListVirtualProvider
         v-if="shouldVirtualize || forceVirtualize"
         v-slot="{ containerProps, list, wrapperProps }"
@@ -188,7 +203,10 @@ onMounted(() => {
             'scrollbar-gutter-stable': settings.layout.element.trackList.showScrollbarGutter,
           }"
         >
-          <LayoutTrackListColumns v-bind="props" class="h-8 top-0 sticky z-30" />
+          <LayoutTrackListColumns
+            v-bind="props"
+            class="h-8 top-0 sticky z-30"
+          />
           <LayoutTrackListRowContextMenu :entries="contextMenuEntries">
             <div
               class="grid h-full"
@@ -237,7 +255,10 @@ onMounted(() => {
           'scrollbar-gutter-stable': settings.layout.element.trackList.showScrollbarGutter,
         }"
       >
-        <LayoutTrackListColumns v-bind="props" class="h-8 top-0 sticky z-30" />
+        <LayoutTrackListColumns
+          v-bind="props"
+          class="h-8 top-0 sticky z-30"
+        />
         <LayoutTrackListRowContextMenu :entries="contextMenuEntries">
           <div
             class="grid"

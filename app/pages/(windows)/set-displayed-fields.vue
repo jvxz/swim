@@ -11,7 +11,11 @@ const availableListQuery = shallowRef('')
 const { contains } = useFilter({ sensitivity: 'base' })
 
 const activeListEl = useTemplateRef<HTMLDivElement>('activeListEl')
-const { barStyles: activeListBarStyles, draggingItem: draggingActiveItem, getDragElementProps: activeDragElementProps } = useDraggable(columnFields, activeListEl, {
+const {
+  barStyles: activeListBarStyles,
+  draggingItem: draggingActiveItem,
+  getDragElementProps: activeDragElementProps,
+} = useDraggable(columnFields, activeListEl, {
   _name: 'active',
   class: {
     dragging: 'opacity-50',
@@ -23,34 +27,38 @@ const { barStyles: activeListBarStyles, draggingItem: draggingActiveItem, getDra
     columnFields.value = handleListRearrange(columnFields, params)
     isDragging.value = false
   },
-  onDragStart: () => isDragging.value = true,
+  onDragStart: () => (isDragging.value = true),
 })
 
 const availableListEl = useTemplateRef<HTMLDivElement>('availableListEl')
-const { getDragElementProps: availableDragElementProps } = useDraggable(toRef(objectValues(ALL_TRACK_LIST_COLUMNS)), availableListEl, {
-  _name: 'available',
-  direction: 'vertical',
-  doDragGhost: true,
-  group: 'col-fields',
-  onDragEnd: (params) => {
-    if (params.targetItem?._listId === params.prevItem._listId)
-      return
+const { getDragElementProps: availableDragElementProps } = useDraggable(
+  toRef(objectValues(ALL_TRACK_LIST_COLUMNS)),
+  availableListEl,
+  {
+    _name: 'available',
+    direction: 'vertical',
+    doDragGhost: true,
+    group: 'col-fields',
+    onDragEnd: (params) => {
+      if (params.targetItem?._listId === params.prevItem._listId) return
 
-    columnFields.value = columnFields.value.filter(f => f.key !== params.prevItem.data.key)
-    isDragging.value = false
+      columnFields.value = columnFields.value.filter((f) => f.key !== params.prevItem.data.key)
+      isDragging.value = false
+    },
+    onDragStart: () => (isDragging.value = true),
   },
-  onDragStart: () => isDragging.value = true,
-})
+)
 
 function handleRemoveField(field: TrackListColumn | null) {
-  if (!field)
-    return
+  if (!field) return
 
-  setColumnFields(columnFields.value.filter(f => f.key !== field.key).map(f => f.key))
+  setColumnFields(columnFields.value.filter((f) => f.key !== field.key).map((f) => f.key))
 }
 
 const { isOutside: isOutsideAvailableList } = useMouseInElement(availableListEl)
-const showDeleteOverlay = computed(() => !!draggingActiveItem.value && !isOutsideAvailableList.value)
+const showDeleteOverlay = computed(
+  () => !!draggingActiveItem.value && !isOutsideAvailableList.value,
+)
 </script>
 
 <template>
@@ -63,34 +71,40 @@ const showDeleteOverlay = computed(() => !!draggingActiveItem.value && !isOutsid
         placeholder="Search available fields..."
         class="shrink-0"
       />
-      <UDraggableList ref="availableListEl" class="rounded-sm flex flex-col gap-1 size-full relative overflow-y-auto">
+      <UDraggableList
+        ref="availableListEl"
+        class="rounded-sm flex flex-col gap-1 size-full relative overflow-y-auto"
+      >
         <div
           v-for="column in ALL_TRACK_LIST_COLUMNS"
           v-show="contains(`${column.label} ${column.key}`, availableListQuery)"
           :key="column.key"
           class="flex shrink-0 w-full active:text-foreground"
           :class="{
-            'pointer-events-none': columnFields.some(f => f.key === column.key),
+            'pointer-events-none': columnFields.some((f) => f.key === column.key),
             'opacity-50': showDeleteOverlay,
           }"
           v-bind="availableDragElementProps(column)"
         >
           <UDraggableItem
-            :disabled="columnFields.some(f => f.key === column.key)"
+            :disabled="columnFields.some((f) => f.key === column.key)"
             :item="column"
             class="rounded-none flex-1"
             @pointerdown.right="selectedField = column"
-            @click="() => {
-              if (!isDragging) columnFields = [...columnFields, column]
-            }"
+            @click="
+              () => {
+                if (!isDragging) columnFields = [...columnFields, column]
+              }
+            "
           >
             <span class="truncate">{{ column.label }}</span>
           </UDraggableItem>
         </div>
-        <div v-if="showDeleteOverlay" class="grid size-full pointer-events-none inset-0 place-items-center absolute">
-          <p class="text-lg font-medium">
-            Drop to delete
-          </p>
+        <div
+          v-if="showDeleteOverlay"
+          class="grid size-full pointer-events-none inset-0 place-items-center absolute"
+        >
+          <p class="text-lg font-medium">Drop to delete</p>
         </div>
       </UDraggableList>
     </UDraggableShell>
@@ -98,8 +112,14 @@ const showDeleteOverlay = computed(() => !!draggingActiveItem.value && !isOutsid
     <UContextMenu>
       <UContextMenuTrigger as-child>
         <UDraggableShell class="p-0 flex-1 w-full">
-          <div ref="activeListEl" class="rounded-sm flex flex-col gap-1 size-full overflow-y-auto">
-            <div :style="activeListBarStyles" class="bg-muted-foreground h-px absolute z-120" />
+          <div
+            ref="activeListEl"
+            class="rounded-sm flex flex-col gap-1 size-full overflow-y-auto"
+          >
+            <div
+              :style="activeListBarStyles"
+              class="bg-muted-foreground h-px absolute z-120"
+            />
             <div
               v-for="item in columnFields"
               :key="item.key"
@@ -121,16 +141,17 @@ const showDeleteOverlay = computed(() => !!draggingActiveItem.value && !isOutsid
                 data-no-drag
                 @click="handleRemoveField(item)"
               >
-                <Icon name="tabler:trash" class="size-3.5!" />
+                <Icon
+                  name="tabler:trash"
+                  class="size-3.5!"
+                />
               </UButton>
             </div>
           </div>
         </UDraggableShell>
       </UContextMenuTrigger>
       <UContextMenuContent>
-        <UContextMenuItem @click="handleRemoveField(selectedField)">
-          Remove
-        </UContextMenuItem>
+        <UContextMenuItem @click="handleRemoveField(selectedField)"> Remove </UContextMenuItem>
       </UContextMenuContent>
     </UContextMenu>
   </div>

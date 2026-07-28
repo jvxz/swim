@@ -1,11 +1,11 @@
-import type { Pinia } from 'pinia'
 import { join } from '@tauri-apps/api/path'
 import { createPlugin, getStoreCollectionPath } from '@tauri-store/pinia'
+import type { Pinia } from 'pinia'
 
 export default defineNuxtPlugin({
   name: 'stores',
   setup: async ({ $pinia }) => {
-    ($pinia as Pinia).use(createPlugin())
+    ;($pinia as Pinia).use(createPlugin())
 
     await cleanupConsoleFiles()
 
@@ -19,6 +19,6 @@ export default defineNuxtPlugin({
 
 async function cleanupConsoleFiles() {
   const storeCollectionPath = await getStoreCollectionPath()
-  await useTauriFsRemove(await join(storeCollectionPath, 'console.json')).catch(() => { })
-  await useTauriFsRemove(await join(storeCollectionPath, 'console.dev.json')).catch(() => { })
+  await useTauriFsRemove(await join(storeCollectionPath, 'console.json')).catch(() => {})
+  await useTauriFsRemove(await join(storeCollectionPath, 'console.dev.json')).catch(() => {})
 }

@@ -1,16 +1,19 @@
 <script lang="ts" setup generic="T extends string">
-withDefaults(defineProps<{
-  disabled?: boolean
-  values: T[]
-  label: string
-  formatUpperFirst?: boolean
-  classes?: {
-    trigger?: string
-    content?: string
-  }
-}>(), {
-  formatUpperFirst: true,
-})
+withDefaults(
+  defineProps<{
+    disabled?: boolean
+    values: T[]
+    label: string
+    formatUpperFirst?: boolean
+    classes?: {
+      trigger?: string
+      content?: string
+    }
+  }>(),
+  {
+    formatUpperFirst: true,
+  },
+)
 
 const modelValue = defineModel<T>()
 </script>
@@ -24,7 +27,11 @@ const modelValue = defineModel<T>()
     <USelectRoot v-model:model-value="modelValue">
       <USelectTrigger :class="cn('w-lg', $props.classes?.trigger)">
         <USelectValue>
-          {{ formatUpperFirst ? upperFirst(splitByCase(modelValue).map(flatCase).join(' ')) : modelValue }}
+          {{
+            formatUpperFirst
+              ? upperFirst(splitByCase(modelValue).map(flatCase).join(' '))
+              : modelValue
+          }}
         </USelectValue>
       </USelectTrigger>
       <USelectContent :class="$props.classes?.content">

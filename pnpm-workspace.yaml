@@ -1,0 +1,38 @@
+packages:
+  - '.'
+
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@0.2.6
+  vitest: 4.1.10
+  vite-plus: 0.2.6
+
+# Successor to bun's `trustedDependencies`. `vp migrate` writes these as
+# placeholders; every entry must be an explicit boolean or pnpm silently skips the
+# build script (better-sqlite3 in particular has to compile for kysely-codegen).
+allowBuilds:
+  better-sqlite3: true
+  edgedriver: true
+  electron: true
+  esbuild: true
+  geckodriver: true
+  unrs-resolver: true
+  vue-demi: true
+
+# `vite` must stay aliased to the Vite+ core build that matches `vite-plus`.
+#
+# `vue` is forced to one copy: left alone, pnpm installs 3.5.30 and 3.5.40 side by
+# side, which produces two `pinia` peer variants — so @tauri-store/pinia's
+# `declare module 'pinia'` augments an identity the app never sees, and `$tauri` /
+# `tauri: {}` stop type-checking. Two Vue copies in one bundle is a runtime hazard
+# too. 3.5.30 specifically: see the compiler-sfc note in CLAUDE.md.
+overrides:
+  vite: 'catalog:'
+  vitest: 'catalog:'
+  vue: 3.5.30
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: '*'
+    vitest: '*'

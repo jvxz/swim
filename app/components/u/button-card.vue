@@ -7,13 +7,15 @@ const props = defineProps<{
 <template>
   <button
     data-slot="button-card"
-    :class="cn(
-      buttonVariants({ variant: 'soft' }),
-      staticStyles.base,
-      staticStyles.variant.default,
-      'w-full',
-      props.class,
-    )"
+    :class="
+      cn(
+        buttonVariants({ variant: 'soft' }),
+        staticStyles.base,
+        staticStyles.variant.default,
+        'w-full',
+        props.class,
+      )
+    "
   >
     <slot />
   </button>

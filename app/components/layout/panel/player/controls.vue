@@ -10,25 +10,36 @@ const { playbackStatus, playPauseCurrentTrack } = usePlayback()
   <div :class="cn('flex items-center justify-center gap-3', props.class)">
     <!-- shuffle -->
     <LayoutPanelPlayerButton>
-      <Icon name="tabler:arrows-shuffle" class="size-5!" />
+      <Icon
+        name="tabler:arrows-shuffle"
+        class="size-5!"
+      />
     </LayoutPanelPlayerButton>
     <!-- skip back -->
     <LayoutPanelPlayerButton>
-      <Icon name="tabler:player-skip-back-filled" class="size-5!" />
+      <Icon
+        name="tabler:player-skip-back-filled"
+        class="size-5!"
+      />
     </LayoutPanelPlayerButton>
     <!-- play/pause -->
-    <LayoutPanelPlayerButton variant="main" @click="playPauseCurrentTrack()">
+    <LayoutPanelPlayerButton
+      variant="main"
+      @click="playPauseCurrentTrack()"
+    >
       <Icon
-        :name="playbackStatus?.is_playing
-          ? 'tabler:player-pause-filled'
-          : 'tabler:player-play-filled'
+        :name="
+          playbackStatus?.is_playing ? 'tabler:player-pause-filled' : 'tabler:player-play-filled'
         "
         class="text-background size-6!"
       />
     </LayoutPanelPlayerButton>
     <!-- skip forward -->
     <LayoutPanelPlayerButton>
-      <Icon name="tabler:player-skip-forward-filled" class="size-5!" />
+      <Icon
+        name="tabler:player-skip-forward-filled"
+        class="size-5!"
+      />
     </LayoutPanelPlayerButton>
     <!-- repeat -->
     <LayoutPanelPlayerButton>

@@ -95,13 +95,7 @@ export default defineNuxtPlugin({
     })
 
     const menu = await Menu.new({
-      items: [
-        app,
-        file,
-        edit,
-        view,
-        help,
-      ],
+      items: [app, file, edit, view, help],
     })
 
     await menu.setAsAppMenu()

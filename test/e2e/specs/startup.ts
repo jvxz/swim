@@ -12,11 +12,12 @@ describe('tauri startup behavior', () => {
     for (let i = 0; i < count; i++) {
       if (i > 0) {
         await browser.reloadSession(capabilities[0])
-        await new Promise(r => setTimeout(r, 400))
+        await new Promise((r) => setTimeout(r, 400))
       }
 
       await browser.waitUntil(
-        async () => (await browser.execute(() => typeof window.__TAURI_INVOKE__ === 'function')) === true,
+        async () =>
+          (await browser.execute(() => typeof window.__TAURI_INVOKE__ === 'function')) === true,
         { interval: 100, timeout: 10000 },
       )
     }

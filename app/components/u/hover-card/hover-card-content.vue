@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { HoverCardContentProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
 import { useForwardProps } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
 
 const props = withDefaults(
   defineProps<HoverCardContentProps & { class?: HTMLAttributes['class'] }>(),
@@ -19,13 +19,7 @@ const forwardedProps = useForwardProps(delegatedProps)
   <HoverCardPortal>
     <HoverCardContent
       v-bind="forwardedProps"
-      :class="
-        cn(
-          popoverStyles.content,
-          'w-64 p-4 text-sm',
-          props.class,
-        )
-      "
+      :class="cn(popoverStyles.content, 'w-64 p-4 text-sm', props.class)"
     >
       <slot />
     </HoverCardContent>

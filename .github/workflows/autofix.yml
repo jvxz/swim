@@ -12,12 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version-file: .node-version
+          cache: true
 
-      - name: install dependencies
-        run: bun install
-
-      - run: bun run lint --fix
+      # oxfmt + oxlint for everything, then eslint for the .vue-only rules.
+      - run: vp check --fix
+      - run: vp run lint --fix
 
       - uses: autofix-ci/action@7a166d7532b277f34e16238930461bf77f9d7ed8
-        with: {commit-message: 'chore: apply automated updates'}
+        with: { commit-message: 'chore: apply automated updates' }

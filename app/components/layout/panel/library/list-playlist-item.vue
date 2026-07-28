@@ -18,14 +18,13 @@ const { getTracksData } = useTrackData()
 
 async function handleDrop(itemPaths: string[]) {
   const tracks = await getTracksData(itemPaths)
-  const validTracks = tracks.filter(track => track.valid)
+  const validTracks = tracks.filter((track) => track.valid)
 
-  if (validTracks.length > 0)
-    await addToPlaylist(props.playlist.id, validTracks)
+  if (validTracks.length > 0) await addToPlaylist(props.playlist.id, validTracks)
 }
 
 const route = useRoute()
-const urlPlaylistId = computed(() => 'id' in route.params ? Number(route.params.id) : null)
+const urlPlaylistId = computed(() => ('id' in route.params ? Number(route.params.id) : null))
 </script>
 
 <template>
@@ -37,7 +36,10 @@ const urlPlaylistId = computed(() => 'id' in route.params ? Number(route.params.
     @submit="(name) => emits('submitRename', name)"
   >
     <UContextMenu>
-      <UContextMenuTrigger as-child :disabled="isEditing">
+      <UContextMenuTrigger
+        as-child
+        :disabled="isEditing"
+      >
         <TauriDragoverProvider
           :acceptable-keys="['track-list-entry', 'UNKNOWN']"
           @drop="handleDrop"
@@ -45,14 +47,23 @@ const urlPlaylistId = computed(() => 'id' in route.params ? Number(route.params.
           <UButton
             :variant="isSelected ? 'toggled' : 'togglable'"
             class="group text-foreground w-full justify-start"
-            :class="cn(isEditing ? 'bg-transparent!' : '', urlPlaylistId === playlist.id && 'ghost-button-active', props.class)"
+            :class="
+              cn(
+                isEditing ? 'bg-transparent!' : '',
+                urlPlaylistId === playlist.id && 'ghost-button-active',
+                props.class,
+              )
+            "
             v-bind="$attrs"
-            @click="!isEditing && navigateTo({
-              name: 'playlist-id',
-              params: {
-                id: playlist.id,
-              },
-            })"
+            @click="
+              !isEditing &&
+              navigateTo({
+                name: 'playlist-id',
+                params: {
+                  id: playlist.id,
+                },
+              })
+            "
           >
             <EditableArea>
               <EditablePreview as-child>
@@ -68,12 +79,8 @@ const urlPlaylistId = computed(() => 'id' in route.params ? Number(route.params.
         </TauriDragoverProvider>
       </UContextMenuTrigger>
       <UContextMenuContent class="w-52">
-        <UContextMenuItem @click="edit">
-          Rename
-        </UContextMenuItem>
-        <UContextMenuItem @click="emits('deletePlaylist')">
-          Delete
-        </UContextMenuItem>
+        <UContextMenuItem @click="edit"> Rename </UContextMenuItem>
+        <UContextMenuItem @click="emits('deletePlaylist')"> Delete </UContextMenuItem>
       </UContextMenuContent>
     </UContextMenu>
   </EditableRoot>

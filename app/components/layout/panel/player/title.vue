@@ -6,17 +6,19 @@ const props = defineProps<{
 const { startDrag } = useDrag()
 
 async function handleDragStart() {
-  if (!props.currentTrack)
-    return
+  if (!props.currentTrack) return
 
-  await startDrag({
-    data: {
-      entries: [props.currentTrack],
+  await startDrag(
+    {
+      data: {
+        entries: [props.currentTrack],
+      },
+      key: 'track-list-entry',
     },
-    key: 'track-list-entry',
-  }, {
-    item: [props.currentTrack.path],
-  })
+    {
+      item: [props.currentTrack.path],
+    },
+  )
 }
 
 const [DefineMarquee, ReuseMarquee] = createReusableTemplate()
@@ -36,7 +38,10 @@ const [DefineMarquee, ReuseMarquee] = createReusableTemplate()
     >
       <component :is="$slots.default" />
     </UMarquee>
-    <component :is="$slots.default" v-else />
+    <component
+      :is="$slots.default"
+      v-else
+    />
   </DefineMarquee>
 
   <div

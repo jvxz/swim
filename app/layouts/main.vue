@@ -5,12 +5,10 @@ const tauri = useTauri()
 onBeforeMount(async () => {
   const lastUrl = await tauri.store.get<string>('last-url')
 
-  if (lastUrl)
-    router.push(lastUrl)
+  if (lastUrl) router.push(lastUrl)
 
   router.afterEach((to) => {
-    if (to.fullPath === '/playground')
-      return
+    if (to.fullPath === '/playground') return
 
     tauri.store.set('last-url', to.fullPath)
   })
@@ -21,12 +19,9 @@ const settings = useSettings()
 
 const visiblePanels = computed(() => {
   const panels: LayoutPanelKey[] = []
-  if (settings.layout.panel.left.elements.length)
-    panels.push('left')
-  if (settings.layout.panel.main.elements.length)
-    panels.push('main')
-  if (settings.layout.panel.right.elements.length)
-    panels.push('right')
+  if (settings.layout.panel.left.elements.length) panels.push('left')
+  if (settings.layout.panel.main.elements.length) panels.push('main')
+  if (settings.layout.panel.right.elements.length) panels.push('right')
   return panels
 })
 </script>
@@ -39,7 +34,7 @@ const visiblePanels = computed(() => {
         :key="visiblePanels.join('-')"
         direction="horizontal"
         class="flex flex-1 size-full"
-        @layout="sizes => handlePanelSizeChange(['left', 'main', 'right'], sizes)"
+        @layout="(sizes) => handlePanelSizeChange(['left', 'main', 'right'], sizes)"
       >
         <template v-if="settings.layout.panel.left.elements.length">
           <SplitterPanel

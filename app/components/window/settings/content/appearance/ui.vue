@@ -1,8 +1,6 @@
 <template>
   <div class="flex flex-col gap-2 w-full">
-    <FormSubtitle>
-      UI
-    </FormSubtitle>
+    <FormSubtitle> UI </FormSubtitle>
     <FormPrimitive label="Scale">
       <UNumberFieldRoot
         v-model:model-value="$settings.appearance.ui.scale"

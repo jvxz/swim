@@ -3,10 +3,13 @@ const props = defineProps<{
   entries: TrackListEntry[]
 }>()
 
-const { containerProps, list, wrapperProps } = useVirtualList(computed(() => props.entries), {
-  itemHeight: TRACK_LIST_ITEM_HEIGHT,
-  overscan: 8,
-})
+const { containerProps, list, wrapperProps } = useVirtualList(
+  computed(() => props.entries),
+  {
+    itemHeight: TRACK_LIST_ITEM_HEIGHT,
+    overscan: 8,
+  },
+)
 const modelY = defineModel<number>('scrollY')
 const { y } = useScroll(containerProps.ref, { throttle: 500 })
 
@@ -15,8 +18,7 @@ watch(y, (v) => {
 })
 
 watch(modelY, (v) => {
-  if (v === y.value)
-    return
+  if (v === y.value) return
 
   y.value = v ?? 0
 })

@@ -1,7 +1,8 @@
-import type { FileEntry } from '../../../app/types/tauri-bindings'
 import path from 'node:path'
 
-export function getAudioFixtures(): { path: string, tags: FileEntry['tags'] }[] {
+import type { FileEntry } from '../../../app/types/tauri-bindings'
+
+export function getAudioFixtures(): { path: string; tags: FileEntry['tags'] }[] {
   const getPath = (filename: string) => path.resolve(process.cwd(), 'test/fixtures', filename)
 
   return [

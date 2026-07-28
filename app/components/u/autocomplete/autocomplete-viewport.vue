@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ComboboxViewportProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
 import { AutocompleteViewport, useForwardProps } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
 
 const props = defineProps<ComboboxViewportProps & { class?: HTMLAttributes['class'] }>()
 

@@ -6,7 +6,8 @@ const props = defineProps<{
 }>()
 
 const settings = useSettings()
-const { elementDraggingData, isElementAllowedInPanel, openElementWindow, removeElementFromPanel } = useLayout()
+const { elementDraggingData, isElementAllowedInPanel, openElementWindow, removeElementFromPanel } =
+  useLayout()
 
 function hasSettings(elementKey: LayoutElementKey) {
   const obj = defaultLayoutElementSettings[elementKey]
@@ -35,13 +36,15 @@ function hasSettings(elementKey: LayoutElementKey) {
     }"
     selected-class="bg-blue-500"
     class="flex flex-col gap-1 relative empty:before:text-sm empty:before:text-muted-foreground empty:before:content-['(hidden,_no_elements_contained)'] empty:before:inset-0 empty:before:absolute"
-    @end="(evt) => {
-      if (evt.from !== evt.to) {
-        removeElementFromPanel(props.panelKey, evt.data)
+    @end="
+      (evt) => {
+        if (evt.from !== evt.to) {
+          removeElementFromPanel(props.panelKey, evt.data)
+        }
+        elementDraggingData = null
       }
-      elementDraggingData = null
-    }"
-    @start="evt => elementDraggingData = { element: evt.data, from: props.panelKey }"
+    "
+    @start="(evt) => (elementDraggingData = { element: evt.data, from: props.panelKey })"
   >
     <UContextMenu
       v-for="element in settings.layout.panel[panelKey].elements"
@@ -57,7 +60,10 @@ function hasSettings(elementKey: LayoutElementKey) {
             class="duration-0 transition-none justify-start active:text-muted-foreground active:bg-inherit"
             :class="hasSettings(element) ? 'rounded-r-none' : ''"
           >
-            <Icon name="tabler:grip-vertical" class="size-3.5!" />
+            <Icon
+              name="tabler:grip-vertical"
+              class="size-3.5!"
+            />
             <p>{{ upperFirst(splitByCase(element).map(flatCase).join(' ')) }}</p>
           </UButton>
           <UButton
@@ -67,7 +73,10 @@ function hasSettings(elementKey: LayoutElementKey) {
             class="rounded-l-none duration-0 transition-none"
             @click="openElementWindow(element)"
           >
-            <Icon name="tabler:pencil" class="size-3.5!" />
+            <Icon
+              name="tabler:pencil"
+              class="size-3.5!"
+            />
           </UButton>
         </div>
       </UContextMenuTrigger>
@@ -75,9 +84,7 @@ function hasSettings(elementKey: LayoutElementKey) {
         <UContextMenuItem @click="removeElementFromPanel(props.panelKey, element)">
           Remove
         </UContextMenuItem>
-        <UContextMenuItem @click="openElementWindow(element)">
-          Edit
-        </UContextMenuItem>
+        <UContextMenuItem @click="openElementWindow(element)"> Edit </UContextMenuItem>
       </UContextMenuContent>
     </UContextMenu>
   </VueDraggable>

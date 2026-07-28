@@ -1,5 +1,5 @@
-import type { Ref } from 'vue'
 import { createContext } from 'reka-ui'
+import type { Ref } from 'vue'
 
 export { default as CommandDialog } from './command-dialog.vue'
 export { default as CommandEmpty } from './command-empty.vue'
@@ -16,7 +16,7 @@ export const [useCommand, provideCommandContext] = createContext<{
   allGroups: Ref<Map<string, Set<string>>>
   filterState: {
     search: string
-    filtered: { count: number, items: Map<string, number>, groups: Set<string> }
+    filtered: { count: number; items: Map<string, number>; groups: Set<string> }
   }
 }>('Command')
 

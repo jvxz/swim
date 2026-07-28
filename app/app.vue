@@ -10,9 +10,7 @@ onMounted(async () => {
       e.preventDefault()
       window.hide()
     })
-  }
-  else
-    window.show()
+  } else window.show()
 })
 
 onUnmounted(() => unlisten?.())

@@ -12,9 +12,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       charset: 'utf-8',
-      meta: [
-        { content: 'no', name: 'format-detection' },
-      ],
+      meta: [{ content: 'no', name: 'format-detection' }],
       title: 'swim',
       viewport: 'width=device-width, initial-scale=1',
     },
@@ -30,9 +28,7 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2025-12-02',
 
-  css: [
-    '@/assets/css/globals.css',
-  ],
+  css: ['@/assets/css/globals.css'],
 
   dayjs: {
     plugins: ['duration'],
@@ -54,7 +50,11 @@ export default defineNuxtConfig({
 
   eslint: {
     config: {
-      standalone: false,
+      // `standalone: true` makes @nuxt/eslint supply the vue/ts base config that
+      // @antfu/eslint-config used to. Formatting stays off — oxfmt owns it.
+      formatters: false,
+      standalone: true,
+      stylistic: false,
     },
   },
 
@@ -63,13 +63,7 @@ export default defineNuxtConfig({
     typedPages: true,
   },
 
-  ignore: [
-    '**/src-tauri/**',
-    '**/node_modules/**',
-    '**/.output/**',
-    '**/.nuxt/**',
-    '**/.git/**',
-  ],
+  ignore: ['**/src-tauri/**', '**/node_modules/**', '**/.output/**', '**/.nuxt/**', '**/.git/**'],
 
   imports: {
     dirs: ['types/**', 'constants/**', 'utils/**'],
@@ -78,23 +72,21 @@ export default defineNuxtConfig({
       {
         cache: true,
         from: 'defu',
-        imports: [{
-          as: '$defu',
-          name: 'defu',
-        }],
+        imports: [
+          {
+            as: '$defu',
+            name: 'defu',
+          },
+        ],
       },
       {
         cache: true,
         from: 'vue-draggable-plus',
-        imports: [
-          'useDraggablePlus',
-        ],
+        imports: ['useDraggablePlus'],
       },
       {
         from: 'kysely',
-        imports: [
-          { name: 'Selectable', type: true },
-        ],
+        imports: [{ name: 'Selectable', type: true }],
       },
       {
         from: 'zod',

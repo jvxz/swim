@@ -18,24 +18,24 @@ const sourceColorMap: Record<Error['type'], string> = {
 
 const container = useTemplateRef<HTMLDivElement>('container')
 let pinnedToBottom = true
-watch(() => consoleStore.consoleMessages.length, async () => {
-  const containerEl = unrefElement(container)
-  if (!containerEl)
-    return
+watch(
+  () => consoleStore.consoleMessages.length,
+  async () => {
+    const containerEl = unrefElement(container)
+    if (!containerEl) return
 
-  await nextTick()
+    await nextTick()
 
-  const lastChild = containerEl.lastElementChild
-  if (!lastChild)
-    return
+    const lastChild = containerEl.lastElementChild
+    if (!lastChild) return
 
-  if (pinnedToBottom)
-    lastChild.scrollIntoView({ block: 'start' })
-})
+    if (pinnedToBottom) lastChild.scrollIntoView({ block: 'start' })
+  },
+)
 
 function handleScroll(event: Event) {
   const target = event.target as HTMLElement
-  pinnedToBottom = (target.scrollHeight - target.scrollTop - target.clientHeight) <= 10
+  pinnedToBottom = target.scrollHeight - target.scrollTop - target.clientHeight <= 10
 }
 </script>
 
@@ -56,14 +56,21 @@ function handleScroll(event: Event) {
           'font-mono': $settings.layout.element.console.timestampMono,
         }"
       >
-        {{ $dayjs(message.timestamp).format($settings.layout.element.console.timestamp24Hr ? 'HH:mm' : 'hh:mm') }}
+        {{
+          $dayjs(message.timestamp).format(
+            $settings.layout.element.console.timestamp24Hr ? 'HH:mm' : 'hh:mm',
+          )
+        }}
       </span>
       <span
         v-if="message.source"
         class="font-medium"
-        :class="[sourceColorMap[message.source], {
-          'font-mono': $settings.layout.element.console.messageMono,
-        }]"
+        :class="[
+          sourceColorMap[message.source],
+          {
+            'font-mono': $settings.layout.element.console.messageMono,
+          },
+        ]"
       >
         {{ message.source }}
       </span>

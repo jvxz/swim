@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DropdownMenuSubTriggerProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
 import { useForwardProps } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
 
 const props = defineProps<DropdownMenuSubTriggerProps & { class?: HTMLAttributes['class'] }>()
 
@@ -13,12 +13,12 @@ const forwardedProps = useForwardProps(delegatedProps)
 <template>
   <DropdownMenuSubTrigger
     v-bind="forwardedProps"
-    :class="cn(
-      popoverStyles.item,
-      props.class,
-    )"
+    :class="cn(popoverStyles.item, props.class)"
   >
     <slot />
-    <Icon name="tabler:chevron-right" class="ml-auto size-4" />
+    <Icon
+      name="tabler:chevron-right"
+      class="ml-auto size-4"
+    />
   </DropdownMenuSubTrigger>
 </template>

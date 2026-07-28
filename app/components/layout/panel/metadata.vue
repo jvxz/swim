@@ -2,22 +2,30 @@
 const { currentTrack } = usePlayback()
 const { selectedTrackData } = useTrackSelection()
 
-const { commitChanges, isCommittingChanges, isDirty, revertAllChanges } = useProvideMetadata(() => selectedTrackData.value.entries)
+const { commitChanges, isCommittingChanges, isDirty, revertAllChanges } = useProvideMetadata(
+  () => selectedTrackData.value.entries,
+)
 
 const id3Tag = computed(() => currentTrack.value?.primary_tag ?? ID3_DEFAULT_TAG)
 const { openElementWindow } = useLayout()
 
 const form = useTemplateRef<HTMLFormElement>('form')
 const { focused: isFormFocused } = useFocusWithin(form)
-onKeyStrokeSafe(['meta_s', 'meta_enter'], () => {
-  if (isDirty.value && isFormFocused.value)
-    commitChanges()
-}, { activeElement: form })
+onKeyStrokeSafe(
+  ['meta_s', 'meta_enter'],
+  () => {
+    if (isDirty.value && isFormFocused.value) commitChanges()
+  },
+  { activeElement: form },
+)
 
-onKeyStrokeSafe('meta_r', () => {
-  if (isDirty.value && isFormFocused.value)
-    revertAllChanges()
-}, { activeElement: form })
+onKeyStrokeSafe(
+  'meta_r',
+  () => {
+    if (isDirty.value && isFormFocused.value) revertAllChanges()
+  },
+  { activeElement: form },
+)
 </script>
 
 <template>
@@ -54,7 +62,10 @@ onKeyStrokeSafe('meta_r', () => {
               <Icon name="tabler:arrow-back-up" />
             </UButton>
           </div>
-          <p class="text-xs text-muted-foreground font-medium flex-1 w-full truncate" :title="currentTrack?.filename">
+          <p
+            class="text-xs text-muted-foreground font-medium flex-1 w-full truncate"
+            :title="currentTrack?.filename"
+          >
             {{ currentTrack?.filename }}
           </p>
           <USelectRoot>

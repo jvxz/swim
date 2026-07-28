@@ -15,28 +15,28 @@ export function useSortable<T>(itemsRef: Ref<T[]>) {
   }
 
   function handleDragDrop() {
-    if (!itemDragging.value || !itemOver.value || itemOver.value === itemDragging.value)
-      return
+    if (!itemDragging.value || !itemOver.value || itemOver.value === itemDragging.value) return
 
     const items = toValue(itemsRef)
 
     const newItemIdx = items.indexOf(itemOver.value)
     const oldItemIdx = items.indexOf(itemDragging.value)
 
-    const newItems = items
-      .with(newItemIdx, itemDragging.value)
-      .with(oldItemIdx, itemOver.value)
+    const newItems = items.with(newItemIdx, itemDragging.value).with(oldItemIdx, itemOver.value)
     itemsRef.value = newItems
 
     itemDragging.value = null
     itemOver.value = null
   }
 
-  const getDropoverProps = (item: T, callbacks?: {
-    onDrop?: (itemPaths: string[], meta: DragMetaEntry) => void
-    onOver?: () => void
-  }): InstanceType<typeof TauriDragoverProvider>['$props'] => ({
-    onDrop: (_itemPaths, _meta) => {
+  const getDropoverProps = (
+    item: T,
+    callbacks?: {
+      onDrop?: (itemPaths: string[], meta: DragMetaEntry) => void
+      onOver?: () => void
+    },
+  ): InstanceType<typeof TauriDragoverProvider>['$props'] => ({
+    onDrop: (_itemPaths: string[], _meta: DragMetaEntry) => {
       handleDragDrop()
       callbacks?.onDrop?.(_itemPaths, _meta)
     },

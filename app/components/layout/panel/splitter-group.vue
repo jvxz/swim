@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 import type { SplitterGroupProps } from 'reka-ui'
 
-const props = defineProps<{
-  panelKey: LayoutPanelKey
-  class?: string
-} & SplitterGroupProps>()
+const props = defineProps<
+  {
+    panelKey: LayoutPanelKey
+    class?: string
+  } & SplitterGroupProps
+>()
 
 const { handlePanelElementsSizeChange } = useLayout()
 const settings = useSettings()

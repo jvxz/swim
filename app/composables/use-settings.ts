@@ -1,4 +1,4 @@
-type SettingsEntryKeyFormat = `${typeof SETTINGS_WINDOW_TABS[number]}`
+type SettingsEntryKeyFormat = `${(typeof SETTINGS_WINDOW_TABS)[number]}`
 
 export interface Settings {
   appearance: {

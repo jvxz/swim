@@ -5,17 +5,19 @@ const { createSettingsWindow } = useSettingsWindow()
 const { startDrag } = useDrag()
 
 async function handleDragStart() {
-  if (!currentTrack.value)
-    return
+  if (!currentTrack.value) return
 
-  await startDrag({
-    data: {
-      entries: [currentTrack.value],
+  await startDrag(
+    {
+      data: {
+        entries: [currentTrack.value],
+      },
+      key: 'track-list-entry',
     },
-    key: 'track-list-entry',
-  }, {
-    item: [currentTrack.value.path],
-  })
+    {
+      item: [currentTrack.value.path],
+    },
+  )
 }
 </script>
 
@@ -34,14 +36,26 @@ async function handleDragStart() {
           }"
           @dragstart="handleDragStart"
         />
-        <LayoutPanelPlayerTitle v-if="$settings.layout.element.player.titlePosition === 'left'" :current-track />
+        <LayoutPanelPlayerTitle
+          v-if="$settings.layout.element.player.titlePosition === 'left'"
+          :current-track
+        />
       </div>
-      <LayoutPanelPlayerControls v-if="$settings.layout.element.player.controlsPosition === 'left'" class="mx-auto" />
+      <LayoutPanelPlayerControls
+        v-if="$settings.layout.element.player.controlsPosition === 'left'"
+        class="mx-auto"
+      />
     </div>
 
     <div class="flex shrink-0 flex-col gap-4 w-[45%] items-center justify-center">
-      <LayoutPanelPlayerTitle v-if="$settings.layout.element.player.titlePosition === 'center'" :current-track />
-      <LayoutPanelPlayerControls v-if="$settings.layout.element.player.controlsPosition === 'center'" class="mx-auto" />
+      <LayoutPanelPlayerTitle
+        v-if="$settings.layout.element.player.titlePosition === 'center'"
+        :current-track
+      />
+      <LayoutPanelPlayerControls
+        v-if="$settings.layout.element.player.controlsPosition === 'center'"
+        class="mx-auto"
+      />
       <LayoutPanelPlayerSeekBar
         show-duration="both-sides"
         :show-title="false"
@@ -59,7 +73,10 @@ async function handleDragStart() {
           size="icon"
           @click="createSettingsWindow()"
         >
-          <Icon name="tabler:settings" class="size-4!" />
+          <Icon
+            name="tabler:settings"
+            class="size-4!"
+          />
         </UButton>
       </div>
     </div>

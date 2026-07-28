@@ -9,7 +9,9 @@ export const useTrackSelection = createSharedComposable(() => {
   const selectedTrackDataEntries = ref<TrackListEntry[]>([])
   const selectedTrackData = computed({
     get: () => {
-      const entries: TrackListEntry[] = selectedTrackDataEntries.value.map(entry => trackData.toTrackListEntry(entry))
+      const entries: TrackListEntry[] = selectedTrackDataEntries.value.map((entry) =>
+        trackData.toTrackListEntry(entry),
+      )
       return {
         entries,
         selectedFrom: trackListInput.value,
@@ -24,18 +26,14 @@ export const useTrackSelection = createSharedComposable(() => {
     const entryToEdit = entry
 
     if (shouldSelect === 'select') {
-      if (checkIsSelected(entry))
-        return
+      if (checkIsSelected(entry)) return
 
       selectedTrackDataEntries.value = [...selectedTrackDataEntries.value, entryToEdit]
-    }
-    else {
+    } else {
       selectedTrackDataEntries.value = selectedTrackDataEntries.value.filter((entry) => {
         if (entry.is_playlist_track && entryToEdit.is_playlist_track)
           return entry.position !== entryToEdit.position
-
-        else
-          return entry.path !== entryToEdit.path
+        else return entry.path !== entryToEdit.path
       })
     }
   }
@@ -44,17 +42,14 @@ export const useTrackSelection = createSharedComposable(() => {
     const idx = selectedTrackData.value.entries.findIndex((entry) => {
       if (entry.is_playlist_track && entryToCheck.is_playlist_track)
         return entry.position === entryToCheck.position
-
-      else
-        return entry.path === entryToCheck.path
+      else return entry.path === entryToCheck.path
     })
 
     return idx >= 0
   }
 
   function clearSelectedTracks() {
-    if (selectedTrackData.value.entries.length)
-      selectedTrackDataEntries.value = []
+    if (selectedTrackData.value.entries.length) selectedTrackDataEntries.value = []
   }
 
   const router = useRouter()

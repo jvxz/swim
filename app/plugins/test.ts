@@ -6,6 +6,6 @@ export default defineNuxtPlugin({
   setup: () => {
     // provide the invoke function to the window object
     // for e2e tests to use
-    (window as any).__TAURI_INVOKE__ = invoke
+    ;(window as any).__TAURI_INVOKE__ = invoke
   },
 })

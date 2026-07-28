@@ -21,9 +21,14 @@ const modelValue = useVModel(props, 'modelValue', emits, {
   <textarea
     v-model="modelValue"
     data-slot="textarea"
-    :class="cn(
-      staticStyles.base, interactiveStyles.size.default, staticStyles.variant.default, 'flex field-sizing-content w-full min-w-0 py-1 font-sans font-medium selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:text-foreground placeholder:text-muted-foreground focus-visible:ring-0 md:text-sm',
-      props.class,
-    )"
+    :class="
+      cn(
+        staticStyles.base,
+        interactiveStyles.size.default,
+        staticStyles.variant.default,
+        'flex field-sizing-content w-full min-w-0 py-1 font-sans font-medium selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:text-foreground placeholder:text-muted-foreground focus-visible:ring-0 md:text-sm',
+        props.class,
+      )
+    "
   />
 </template>

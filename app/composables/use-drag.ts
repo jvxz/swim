@@ -1,33 +1,33 @@
 import { startDrag as startTauriDrag } from '@crabnebula/tauri-plugin-drag'
 import { resolveResource } from '@tauri-apps/api/path'
 
-export type DragMetaEntry
-  = | {
-    key: 'layout-element'
-    data: {
-      elementKey: LayoutElementKey
-      from: LayoutPanelKey | 'AVAILABLE_ELEMENTS'
-    }
-  }
+export type DragMetaEntry =
   | {
-    key: 'track-list-entry'
-    data: {
-      entries: TrackListEntry[]
-    }
-  }
-  | {
-    key: 'TEST'
-    data: {
-      item: {
-        id: number
-        name: string
+      key: 'layout-element'
+      data: {
+        elementKey: LayoutElementKey
+        from: LayoutPanelKey | 'AVAILABLE_ELEMENTS'
       }
     }
-  }
   | {
-    key: 'UNKNOWN'
-    data?: never
-  }
+      key: 'track-list-entry'
+      data: {
+        entries: TrackListEntry[]
+      }
+    }
+  | {
+      key: 'TEST'
+      data: {
+        item: {
+          id: number
+          name: string
+        }
+      }
+    }
+  | {
+      key: 'UNKNOWN'
+      data?: never
+    }
   | null
 
 export type DragMetaEntryKey = Extract<DragMetaEntry, { key: unknown }>['key']
@@ -50,10 +50,13 @@ export function useDrag() {
 
     meta.value = newMeta
 
-    await startTauriDrag({
-      icon,
-      item: tauriDragOpts.item,
-    }, tauriDragOpts.onEvent)
+    await startTauriDrag(
+      {
+        icon,
+        item: tauriDragOpts.item,
+      },
+      tauriDragOpts.onEvent,
+    )
   }
 
   return {

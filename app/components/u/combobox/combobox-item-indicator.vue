@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ComboboxItemIndicatorProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
 import { ComboboxItemIndicator, useForwardProps } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
 
 const props = defineProps<ComboboxItemIndicatorProps & { class?: HTMLAttributes['class'] }>()
 
@@ -17,7 +17,10 @@ const forwarded = useForwardProps(delegatedProps)
     :class="cn('ml-auto', props.class)"
   >
     <slot>
-      <Icon name="tabler:check" class="size-3!" />
+      <Icon
+        name="tabler:check"
+        class="size-3!"
+      />
     </slot>
   </ComboboxItemIndicator>
 </template>

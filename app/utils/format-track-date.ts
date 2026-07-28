@@ -3,8 +3,7 @@
  * or the placeholder when the track has no such date.
  */
 export function formatTrackDate(value: string | null | undefined) {
-  if (!value)
-    return PLACEHOLDER_CHAR
+  if (!value) return PLACEHOLDER_CHAR
 
   const { $dayjs } = useNuxtApp()
 

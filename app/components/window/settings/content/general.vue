@@ -5,9 +5,7 @@
         id="clickOutsideToDeselect"
         v-model:model-value="$settings.general.clickOutsideToDeselect"
       />
-      <ULabel for="clickOutsideToDeselect">
-        Click outside of track list to deselect
-      </ULabel>
+      <ULabel for="clickOutsideToDeselect"> Click outside of track list to deselect </ULabel>
     </div>
   </WindowSettingsContentTabLayout>
 </template>

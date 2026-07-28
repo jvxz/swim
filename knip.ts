@@ -32,9 +32,7 @@ const config: KnipConfig = {
         'vue-router',
       ],
       ignoreUnresolved: ['#components', '#oauth/config'],
-      project: [
-        '**/*.{ts,vue,cjs,mjs}',
-      ],
+      project: ['**/*.{ts,vue,cjs,mjs}'],
     },
   },
 }

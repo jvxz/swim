@@ -10,13 +10,19 @@ const modelValue = defineModel<boolean>()
 </script>
 
 <template>
-  <div class="flex gap-2 items-center" v-bind="$attrs">
+  <div
+    class="flex gap-2 items-center"
+    v-bind="$attrs"
+  >
     <UCheckbox
       :id
       v-model:model-value="modelValue"
       :disabled
     />
-    <ULabel :for="id" :disabled>
+    <ULabel
+      :for="id"
+      :disabled
+    >
       {{ label }}
     </ULabel>
   </div>

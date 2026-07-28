@@ -1,38 +1,42 @@
-import antfu from '@antfu/eslint-config'
+import unocss from '@unocss/eslint-plugin'
+
 import withNuxt from './.nuxt/eslint.config.mjs'
 
+// Vite+ owns everything oxc can parse: `vp fmt` (oxfmt) formats *every* file type
+// including `.vue`, and `vp lint` (oxlint + tsgolint) lints JS/TS. ESLint is kept
+// only for the two things they cannot do — `.vue` semantic rules, since oxlint has
+// no SFC parser, and UnoCSS utility-class ordering.
+//
+// The `lint` script targets `**/*.vue` explicitly; do not widen it back to `.` or
+// ESLint will start duplicating oxlint on every TS file again.
 export default withNuxt(
-  antfu({
-    formatters: true,
-    ignores: [
-      './src-tauri/**',
-      './.output/**',
-      './.nuxt/**',
-      './app/types/tauri-bindings.ts',
-      './app/types/db.ts',
-      './.kysely-codegenrc.json',
-      './app/utils/id3.ts',
-    ],
+  {
+    ...unocss.configs.flat,
+    files: ['**/*.vue'],
+  },
+  {
+    files: ['**/*.vue'],
     rules: {
-      'antfu/curly': ['off'],
-      'curly': ['warn', 'multi-or-nest'],
-      'node/prefer-global/buffer': 'off',
-      'node/prefer-global/process': 'off',
-      'perfectionist/sort-objects': 'warn',
+      // @nuxt/eslint's standalone base is stricter than @antfu/eslint-config was.
+      // These are the rules antfu had off or relaxed, kept that way so swapping the
+      // base config does not turn 30-odd untouched SFCs red.
+      '@typescript-eslint/no-dynamic-delete': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-expressions': [
+        'error',
+        {
+          allowShortCircuit: true,
+          allowTaggedTemplates: true,
+          allowTernary: true,
+        },
+      ],
+      '@typescript-eslint/unified-signatures': 'off',
       'vue/html-self-closing': 'off',
-      'vue/max-attributes-per-line': ['warn', {
-        multiline: {
-          max: 1,
-        },
-        singleline: {
-          max: 2,
-        },
-      }],
+      'vue/multi-word-component-names': 'off',
       'vue/no-multiple-template-root': 'off',
+      'vue/require-default-prop': 'off',
       'vue/sort-keys': 'warn',
     },
-    typescript: true,
-    unocss: true,
-    vue: true,
-  }),
+  },
 )
