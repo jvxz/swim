@@ -240,7 +240,7 @@ onMounted(() => {
                 @row-drag-start="handleRowDragStart($event, checkIsSelected(entry.data))"
                 @mousedown.left="handleSelectDragStart(entry.data)"
                 @mouseover="handleDragHoverSelect(entry.data)"
-                @play-track="playTrack(entry.data)"
+                @play-track="playTrack(entry.data, folderEntries)"
                 @mousedown.right="handleRightClick(entry.data)"
               />
             </div>
@@ -292,7 +292,7 @@ onMounted(() => {
               @row-drag-start="handleRowDragStart($event, checkIsSelected(entry))"
               @mousedown.left="handleSelectDragStart(entry)"
               @mouseover="handleDragHoverSelect(entry)"
-              @play-track="playTrack(entry)"
+              @play-track="playTrack(entry, folderEntries)"
               @mousedown.right="handleRightClick(entry)"
             />
           </div>
