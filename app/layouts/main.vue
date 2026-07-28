@@ -14,7 +14,7 @@ onBeforeMount(async () => {
   })
 })
 
-const { handlePanelSizeChange } = useLayout()
+const { handlePanelSizeChange } = usePanelLayout()
 const settings = useSettings()
 
 const visiblePanels = computed(() => {

@@ -7,7 +7,7 @@ const { commitChanges, isCommittingChanges, isDirty, revertAllChanges } = usePro
 )
 
 const id3Tag = computed(() => currentTrack.value?.primary_tag ?? ID3_DEFAULT_TAG)
-const { openElementWindow } = useLayout()
+const { openElementWindow } = usePanelLayout()
 
 const form = useTemplateRef<HTMLFormElement>('form')
 const { focused: isFormFocused } = useFocusWithin(form)
