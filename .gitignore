@@ -11,3 +11,8 @@ node_modules
 dist
 src-tauri/target
 AGENTS.md
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key

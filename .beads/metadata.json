@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "music_test_vibe",
+  "project_id": "75d477e6-2252-43b9-9d7d-2422ccc157e2"
+}
