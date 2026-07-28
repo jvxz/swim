@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useDraggable } from 'vue-draggable-plus'
 
-const { elementDraggingData } = useLayout()
+const { elementDraggingData } = usePanelLayout()
 
 const listEl = shallowRef<HTMLDivElement | null>(null)
 const { isOutside: isOutsideList } = useMouseInElement(listEl)

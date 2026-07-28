@@ -6,7 +6,7 @@ const props = defineProps<{
 const containerEl = shallowRef<HTMLDivElement | null>(null)
 const { isOutside: isOutsideContainer } = useMouseInElement(containerEl)
 
-const { elementDraggingData, isElementAllowedInPanel } = useLayout()
+const { elementDraggingData, isElementAllowedInPanel } = usePanelLayout()
 
 const containerHoverClass = computed(() => {
   if (!elementDraggingData.value) return ''

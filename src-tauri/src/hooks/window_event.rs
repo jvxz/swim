@@ -6,15 +6,16 @@ use crate::playback::StreamStatus;
 pub fn handle_window_event(window: &Window, event: &WindowEvent) {
   if let WindowEvent::CloseRequested { .. } = event {
     if let Ok(store) = window.store("prefs.json") {
-      let playback_status = store.get("playback-status").unwrap_or_default();
-      let mut playback_status: StreamStatus = serde_json::from_value(playback_status).unwrap();
+      if let Some(Ok(mut playback_status)) = store
+        .get("playback-status")
+        .map(|v| serde_json::from_value::<StreamStatus>(v))
+      {
+        playback_status.is_playing = false;
 
-      playback_status.is_playing = false;
-
-      store.set(
-        "playback-status",
-        serde_json::to_value(playback_status).unwrap(),
-      );
+        if let Ok(value) = serde_json::to_value(playback_status) {
+          store.set("playback-status", value);
+        }
+      }
     }
   }
 }

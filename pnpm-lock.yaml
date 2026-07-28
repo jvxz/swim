@@ -35,14 +35,14 @@ importers:
         specifier: 0.11.3
         version: 0.11.3(magic-string@1.1.0)(magicast@0.5.3)(oxc-parser@0.140.0)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.30(typescript@5.9.3)))(rolldown@1.2.0)(unplugin@3.3.0(@voidzero-dev/vite-plus-core@0.2.6(@types/node@25.9.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0))(esbuild@0.28.1)(rolldown@1.2.0)(rollup@4.62.3)(webpack@5.109.0(cssnano@8.0.2(postcss@8.5.23))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.23)))
       '@tauri-apps/api':
-        specifier: ^2.10.1
-        version: 2.11.1
+        specifier: ~2.10.1
+        version: 2.10.1
       '@tauri-apps/plugin-dialog':
         specifier: ~2.6.0
         version: 2.6.0
       '@tauri-apps/plugin-fs':
-        specifier: ^2.4.5
-        version: 2.5.1
+        specifier: ~2.4.5
+        version: 2.4.5
       '@tauri-apps/plugin-http':
         specifier: ~2.5.7
         version: 2.5.9
@@ -2134,6 +2134,9 @@ packages:
     peerDependencies:
       vue: 3.5.30
 
+  '@tauri-apps/api@2.10.1':
+    resolution: {integrity: sha512-hKL/jWf293UDSUN09rR69hrToyIXBb8CjGaWC7gfinvnQrBVvnLr08FeFi38gxtugAVyVcTa5/FD/Xnkb1siBw==}
+
   '@tauri-apps/api@2.11.1':
     resolution: {integrity: sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA==}
 
@@ -2216,8 +2219,8 @@ packages:
   '@tauri-apps/plugin-dialog@2.6.0':
     resolution: {integrity: sha512-q4Uq3eY87TdcYzXACiYSPhmpBA76shgmQswGkSVio4C82Sz2W4iehe9TnKYwbq7weHiL88Yw19XZm7v28+Micg==}
 
-  '@tauri-apps/plugin-fs@2.5.1':
-    resolution: {integrity: sha512-9Lz+Jopp6QyeEWhlpkMx4R/+P9HgR+AVAI4vOZhlT8Xaymtz8iVI/Ov984/XTqgJz/5gz5NretqPB/XEMS3NhQ==}
+  '@tauri-apps/plugin-fs@2.4.5':
+    resolution: {integrity: sha512-dVxWWGE6VrOxC7/jlhyE+ON/Cc2REJlM35R3PJX3UvFw2XwYhLGQVAIyrehenDdKjotipjYEVc4YjOl3qq90fA==}
 
   '@tauri-apps/plugin-http@2.5.9':
     resolution: {integrity: sha512-lCiY0+vs4HvIUSvZrBs8TC3TiCB0MOPRmiUjTq4prW7SlcJE2jdLeT6KBsJrT9Tlplufl7W1pY6SFAO3gCWxDA==}
@@ -9466,6 +9469,8 @@ snapshots:
       '@tanstack/virtual-core': 3.17.6
       vue: 3.5.30(typescript@5.9.3)
 
+  '@tauri-apps/api@2.10.1': {}
+
   '@tauri-apps/api@2.11.1': {}
 
   '@tauri-apps/cli-darwin-arm64@2.11.4':
@@ -9519,7 +9524,7 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.11.1
 
-  '@tauri-apps/plugin-fs@2.5.1':
+  '@tauri-apps/plugin-fs@2.4.5':
     dependencies:
       '@tauri-apps/api': 2.11.1
 
