@@ -19,6 +19,7 @@ pub enum StreamAction {
   SetVolume(f32),
   ToggleMute,
   Reset,
+  SetOutputDevice(Option<String>),
 }
 
 #[derive(Serialize, Clone, Deserialize, Type, Debug)]

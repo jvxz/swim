@@ -1,5 +1,8 @@
 use crate::error::{emit_error, Error, Result};
 use crate::playback::{StreamAction, StreamStatus};
+use cpal::traits::{DeviceTrait, HostTrait};
+use cpal::StreamError;
+use kira::backend::cpal::CpalBackendSettings;
 use kira::sound::static_sound::{StaticSoundData, StaticSoundHandle};
 use kira::sound::streaming::{StreamingSoundHandle, StreamingSoundSettings};
 use kira::sound::{FromFileError, PlaybackPosition, Region};
@@ -7,10 +10,140 @@ use kira::{
   self, sound::streaming::StreamingSoundData, AudioManager, AudioManagerSettings, DefaultBackend,
 };
 use kira::{Decibels, Easing, StartTime, Tween, Value};
+use serde::{Deserialize, Serialize};
+use specta::Type;
 use std::thread;
 use std::time::Duration;
-use tauri::AppHandle;
+use tauri::{AppHandle, Emitter};
 use tokio::sync::{mpsc, oneshot};
+
+#[derive(Serialize, Clone, Deserialize, Type, Debug)]
+pub struct AudioDeviceInfo {
+  pub name: String,
+  pub is_default: bool,
+}
+
+fn device_name(device: &cpal::Device) -> Option<String> {
+  device.description().ok().map(|d| d.name().to_string())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn list_output_devices() -> Result<Vec<AudioDeviceInfo>> {
+  let host = cpal::default_host();
+  let default_name = host.default_output_device().and_then(|d| device_name(&d));
+
+  let devices = host
+    .output_devices()
+    .map_err(|e| Error::Audio(format!("failed to enumerate output devices: {e}")))?;
+
+  Ok(
+    devices
+      .filter_map(|d| device_name(&d))
+      .map(|name| {
+        let is_default = default_name.as_deref() == Some(name.as_str());
+        AudioDeviceInfo { name, is_default }
+      })
+      .collect(),
+  )
+}
+
+fn find_device_by_name(name: &str) -> Option<cpal::Device> {
+  cpal::default_host()
+    .output_devices()
+    .ok()?
+    .find(|d| device_name(d).is_some_and(|n| n == name))
+}
+
+/// Creates an audio manager targeting the named output device, falling back
+/// to the system default if no device name is given. Errors (without
+/// creating a manager) if a specific device was requested but isn't
+/// currently present.
+fn create_audio_manager(device_name: Option<&str>) -> Result<(AudioManager<DefaultBackend>, bool)> {
+  let device = match device_name {
+    Some(name) => Some(
+      find_device_by_name(name)
+        .ok_or_else(|| Error::Audio(format!("output device \"{name}\" not found")))?,
+    ),
+    None => None,
+  };
+  let used_custom_device = device.is_some();
+
+  let manager = AudioManager::new(AudioManagerSettings {
+    internal_buffer_size: 256,
+    backend_settings: CpalBackendSettings {
+      device,
+      ..Default::default()
+    },
+    ..Default::default()
+  })
+  .map_err(|_| Error::Audio("failed to create audio manager".to_string()))?;
+
+  Ok((manager, used_custom_device))
+}
+
+/// Recreates the current handle on a freshly (re)created audio manager,
+/// resuming at the same track/position/volume/loop state.
+fn reload_handle(
+  audio_manager: &mut AudioManager<DefaultBackend>,
+  state: &StreamStatus,
+  loader_tx: &std::sync::mpsc::Sender<(i32, String)>,
+  static_sound_id: &mut i32,
+) -> Result<CurrentHandle> {
+  let Some(path) = state.path.as_ref() else {
+    return Ok(CurrentHandle::None);
+  };
+  if !std::path::Path::new(path).is_file() {
+    return Ok(CurrentHandle::None);
+  }
+
+  *static_sound_id += 1;
+  let _ = loader_tx.send((*static_sound_id, path.clone()));
+
+  let new_sound_data = load_streaming_data(path.clone())
+    .map_err(|e| Error::Audio(format!("failed to create streaming sound data: {}", e)))?;
+
+  let mut new_handle = audio_manager
+    .play(new_sound_data.with_settings(StreamingSoundSettings {
+      loop_region: if state.is_looping {
+        Some(Region::from(0.0..))
+      } else {
+        None
+      },
+      volume: Value::from(Decibels::from(state.volume)),
+      start_position: PlaybackPosition::Seconds(state.position),
+      ..Default::default()
+    }))
+    .map_err(|_| Error::Audio("failed to play sound via stream".to_string()))?;
+
+  if !state.is_playing {
+    new_handle.pause(TWEEN);
+  }
+
+  let mut handle = CurrentHandle::Streaming(new_handle);
+  handle.set_volume(state.volume, state.is_muted);
+  Ok(handle)
+}
+
+/// Switches the active output device, preserving current playback state.
+/// Leaves the existing manager/handle untouched if the switch fails, so a
+/// bad selection doesn't interrupt whatever is already playing.
+fn switch_output_device(
+  audio_manager: &mut AudioManager<DefaultBackend>,
+  audio_handle: &mut CurrentHandle,
+  device_name: Option<&str>,
+  state: &StreamStatus,
+  loader_tx: &std::sync::mpsc::Sender<(i32, String)>,
+  static_sound_id: &mut i32,
+) -> Result<bool> {
+  let (mut new_manager, used_custom_device) = create_audio_manager(device_name)?;
+  let new_handle = reload_handle(&mut new_manager, state, loader_tx, static_sound_id)?;
+
+  *audio_manager = new_manager;
+  *audio_handle = new_handle;
+
+  Ok(used_custom_device)
+}
 
 const TWEEN: Tween = Tween {
   duration: Duration::from_millis(0),
@@ -24,6 +157,7 @@ enum InternalEvent {
     id: i32,
     data: Option<StaticSoundData>,
   },
+  CheckDeviceHealth,
 }
 
 enum CurrentHandle {
@@ -109,6 +243,7 @@ impl CurrentHandle {
 pub fn spawn_audio_thread(
   mut ui_rx: mpsc::Receiver<(StreamAction, oneshot::Sender<StreamStatus>)>,
   initial_state: Option<StreamStatus>,
+  initial_device: Option<String>,
   app_handle: AppHandle<tauri::Wry>,
 ) -> Result<()> {
   let (event_tx, mut event_rx) = mpsc::channel::<InternalEvent>(32);
@@ -126,11 +261,28 @@ pub fn spawn_audio_thread(
     }
   });
 
-  let mut audio_manager: AudioManager<DefaultBackend> = AudioManager::new(AudioManagerSettings {
-    internal_buffer_size: 256,
-    ..Default::default()
-  })
-  .map_err(|_| Error::Audio("failed to create audio manager".to_string()))?;
+  // device health watchdog: kira only auto-recovers to the *default* device
+  // on disconnect, so we poll for stream errors ourselves to detect when a
+  // user-selected device disappears and fall back gracefully
+  let health_check_tx = event_tx.clone();
+  thread::spawn(move || loop {
+    thread::sleep(Duration::from_secs(1));
+    if health_check_tx
+      .blocking_send(InternalEvent::CheckDeviceHealth)
+      .is_err()
+    {
+      break;
+    }
+  });
+
+  let (mut audio_manager, mut using_custom_device) =
+    match create_audio_manager(initial_device.as_deref()) {
+      Ok(result) => result,
+      Err(e) => {
+        emit_error(app_handle.clone(), e);
+        (create_audio_manager(None)?.0, false)
+      }
+    };
 
   let mut pending_static_data: Option<StaticSoundData> = None;
   let mut audio_handle: CurrentHandle = CurrentHandle::None;
@@ -359,12 +511,46 @@ pub fn spawn_audio_thread(
 
             let _ = response_tx.send(state.clone());
           }
+          StreamAction::SetOutputDevice(device_name) => {
+            match switch_output_device(
+              &mut audio_manager,
+              &mut audio_handle,
+              device_name.as_deref(),
+              &state,
+              &loader_tx,
+              &mut static_sound_id,
+            ) {
+              Ok(used_custom_device) => using_custom_device = used_custom_device,
+              Err(e) => emit_error(app_handle.clone(), e),
+            }
+
+            let _ = response_tx.send(state.clone());
+          }
         }
       }
       InternalEvent::LoadFinished { id, data } => {
         // validate static sound id before updating pending static data
         if id == static_sound_id {
           pending_static_data = data;
+        }
+      }
+      InternalEvent::CheckDeviceHealth => {
+        if using_custom_device {
+          let mut lost_device = false;
+          while let Some(err) = audio_manager.backend_mut().pop_error() {
+            if matches!(
+              err,
+              StreamError::DeviceNotAvailable | StreamError::StreamInvalidated
+            ) {
+              lost_device = true;
+            }
+          }
+
+          if lost_device {
+            using_custom_device = false;
+            log::warn!("output device disconnected, reverted to system default");
+            let _ = app_handle.emit("output-device-fallback", ());
+          }
         }
       }
     }

@@ -1,5 +1,6 @@
 export const SETTINGS_WINDOW_TABS = [
   'general',
+  'playback',
   'library',
   'layout',
   'appearance',
