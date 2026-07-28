@@ -114,6 +114,16 @@ function getCellContent(entry: TrackListEntry, frame: Id3FrameId | undefined) {
       >
         {{ entry.play_count === -1 ? PLACEHOLDER_CHAR : entry.play_count }}
       </div>
+      <!-- date added / last played columns -->
+      <p
+        v-else-if="col.key === 'DATE_ADDED' || col.key === 'LAST_PLAYED'"
+        :class="classes"
+        class="text-sm px-1 truncate"
+        :title="formatTrackDate(col.key === 'DATE_ADDED' ? entry.date_added : entry.last_played)"
+        @dragstart="emits('textDragStart', $event)"
+      >
+        {{ formatTrackDate(col.key === 'DATE_ADDED' ? entry.date_added : entry.last_played) }}
+      </p>
       <!-- other columns -->
       <p
         v-else

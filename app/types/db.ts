@@ -27,8 +27,10 @@ export interface LibraryFolders {
 export interface LibraryTracks {
   album: string | null;
   artist: string | null;
+  date_added: string | null;
   filename: string;
   id: Generated<number>;
+  last_played: string | null;
   path: string;
   title: string | null;
 }

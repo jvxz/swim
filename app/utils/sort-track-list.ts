@@ -27,6 +27,15 @@ export const sortTrackList = createUnrefFn((trackList: TrackListEntry[], input: 
       aValue = a.duration.toString()
       bValue = b.duration.toString()
     }
+    // stored as 'YYYY-MM-DD HH:MM:SS', so lexicographic order is chronological
+    else if (input.sortBy === 'DATE_ADDED') {
+      aValue = a.date_added ?? undefined
+      bValue = b.date_added ?? undefined
+    }
+    else if (input.sortBy === 'LAST_PLAYED') {
+      aValue = a.last_played ?? undefined
+      bValue = b.last_played ?? undefined
+    }
     else if (input.sortBy === 'PLAY_COUNT') {
       aValue = a.play_count.toString()
       bValue = b.play_count.toString()

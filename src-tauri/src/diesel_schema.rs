@@ -28,6 +28,8 @@ diesel::table! {
         title -> Nullable<Text>,
         artist -> Nullable<Text>,
         album -> Nullable<Text>,
+        date_added -> Nullable<Text>,
+        last_played -> Nullable<Text>,
     }
 }
 

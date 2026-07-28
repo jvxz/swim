@@ -1,4 +1,4 @@
-type CacheEntryKeysToOmit = 'name' | 'filename' | 'tags' | 'thumbnail_uri' | 'full_uri' | 'extension' | 'primary_tag' | 'valid' | 'duration' | 'play_count'
+type CacheEntryKeysToOmit = 'name' | 'filename' | 'tags' | 'thumbnail_uri' | 'full_uri' | 'extension' | 'primary_tag' | 'valid' | 'duration' | 'play_count' | 'date_added' | 'last_played'
 export type TrackListCacheEntry = Prettify<Omit<PlaylistEntry, CacheEntryKeysToOmit> | Omit<FolderEntry, CacheEntryKeysToOmit>>
 
 export const useTrackData = defineStore('track-data', () => {

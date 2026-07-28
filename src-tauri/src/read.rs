@@ -45,6 +45,8 @@ pub struct FileEntry {
   pub extension: String,
   pub duration: f64,
   pub play_count: i32,
+  pub date_added: Option<String>,
+  pub last_played: Option<String>,
 }
 
 pub static FOLDER_CACHE: LazyLock<DashMap<String, Arc<Vec<String>>>> = LazyLock::new(DashMap::new);
@@ -201,6 +203,8 @@ fn file_entry_from_path(app_handle: AppHandle<tauri::Wry>, path: PathBuf) -> Res
       extension: String::new(),
       duration: -1.0,
       play_count: 0,
+      date_added: None,
+      last_played: None,
     });
   }
 
@@ -221,7 +225,9 @@ fn file_entry_from_path(app_handle: AppHandle<tauri::Wry>, path: PathBuf) -> Res
     .extension()
     .map(|n| n.to_string_lossy().to_string())
     .unwrap_or("Unknown extension".to_string());
-  let play_count_res = get_play_count(app_handle, &tag_map)?;
+  let play_count_res = get_play_count(app_handle.clone(), &tag_map)?;
+  let (date_added_res, last_played_res) =
+    get_library_dates(app_handle, path.to_string_lossy().as_ref())?;
 
   return Ok(FileEntry {
     filename,
@@ -236,6 +242,8 @@ fn file_entry_from_path(app_handle: AppHandle<tauri::Wry>, path: PathBuf) -> Res
     extension,
     duration,
     play_count: play_count_res.unwrap_or(-1),
+    date_added: date_added_res,
+    last_played: last_played_res,
   });
 }
 
@@ -294,6 +302,33 @@ fn get_play_count(
   };
 
   return Ok(play_count_res);
+}
+
+/// Returns `(date_added, last_played)` for a track, or `(None, None)` when the track
+/// isn't in the library — folder browsing works on files that were never added.
+fn get_library_dates(
+  app_handle: AppHandle<tauri::Wry>,
+  track_path: &str,
+) -> Result<(Option<String>, Option<String>)> {
+  use crate::diesel_schema::library_tracks;
+
+  let mut conn = app_handle
+    .state::<DbPool>()
+    .get()
+    .map_err(|e| Error::Other(e.to_string()))?;
+
+  let row = library_tracks::table
+    .filter(library_tracks::path.eq(track_path))
+    .select((library_tracks::date_added, library_tracks::last_played))
+    .first::<(Option<String>, Option<String>)>(&mut conn)
+    .optional();
+
+  return match row {
+    Ok(value) => Ok(value.unwrap_or((None, None))),
+    // handle errors in CI environments where the table may not be present yet
+    Err(e) if e.to_string().contains("no such table") => Ok((None, None)),
+    Err(e) => Err(Error::Other(e.to_string())),
+  };
 }
 
 fn get_primary_tag(path: impl AsRef<Path>) -> Result<Option<Tag>> {

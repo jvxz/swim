@@ -4,6 +4,7 @@ export const usePlayback = createSharedComposable(() => {
   const { getTrackData, refreshTrackData, trackCache } = useTrackData()
   const { emitMessage } = useConsole()
   const { incrementPlayCount, updatePlayCount } = usePlayCount()
+  const { markTrackPlayed } = useLibrary()
 
   // internal
   const _playbackStatus = ref<StreamStatus | null>(prefs.get('playback-status') as StreamStatus | null)
@@ -72,7 +73,9 @@ export const usePlayback = createSharedComposable(() => {
         // await to prevent race condition
         await nextTick()
       }
-      incrementPlayCount(_currentTrackContext.value)
+      // sequential so the two track-data refreshes can't race each other
+      const playedPath = _currentTrackContext.value.path
+      void incrementPlayCount(_currentTrackContext.value).then(() => markTrackPlayed(playedPath))
       _playbackStatus.value.position = 0
 
       // if not looping, stop playback & reset current track

@@ -1,7 +1,9 @@
+import { sql } from 'kysely'
+
 const LIBRARY_FOLDERS_KEY = 'library-folders'
 
 export function useLibrary() {
-  const { getFolderTracks, getTracksData } = useTrackData()
+  const { getFolderTracks, getTracksData, refreshTrackData } = useTrackData()
 
   async function getLibraryTracks() {
     const tracks = await $db().selectFrom('library_tracks').selectAll().execute()
@@ -61,10 +63,14 @@ export function useLibrary() {
 
     const tracksToDelete = folderTracksSources.filter(source => !libraryTracksSources.some(s => s.track_id === source.track_id))
 
-    await $db()
+    const deletedTracks = await $db()
       .deleteFrom('library_tracks')
       .where('id', 'in', tracksToDelete.map(source => source.track_id))
+      .returning('path')
       .execute()
+
+    // the tracks no longer have a date_added, so the cached file entries are stale
+    await refreshTrackData(deletedTracks.map(track => track.path))
 
     await $db()
       .deleteFrom('library_folders')
@@ -91,6 +97,7 @@ export function useLibrary() {
       .values(tracks.map(track => ({
         album: track.tags.TALB ?? null,
         artist: track.tags.TPE1 ?? null,
+        date_added: sql<string>`CURRENT_TIMESTAMP`,
         filename: track.name,
         path: track.path,
         title: track.tags.TIT2 ?? null,
@@ -117,6 +124,9 @@ export function useLibrary() {
       .onConflict(conflict => conflict.doNothing())
       .execute()
 
+    // date_added lives on the library row, so the cached file entries are now stale
+    await refreshTrackData(existingLibraryTracks.map(track => track.path))
+
     refreshTrackListForType('library')
 
     return existingLibraryTracks
@@ -135,6 +145,17 @@ export function useLibrary() {
       .execute()
   }
 
+  /** No-ops for tracks played from a folder that was never added to the library. */
+  async function markTrackPlayed(path: string) {
+    await $db()
+      .updateTable('library_tracks')
+      .set({ last_played: sql<string>`CURRENT_TIMESTAMP` })
+      .where('path', '=', path)
+      .execute()
+
+    await refreshTrackData(path)
+  }
+
   return {
     addFolderToLibrary,
     addLibraryTrackSource,
@@ -143,6 +164,7 @@ export function useLibrary() {
     getLibraryTracks,
     isAddingFolderToLibrary,
     isRemovingFolderFromLibrary,
+    markTrackPlayed,
     removeFolderFromLibrary,
     useFolderInLibrary,
   }

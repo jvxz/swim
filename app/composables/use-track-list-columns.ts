@@ -1,4 +1,4 @@
-type CustomColumnKey = 'CURRENTLY_PLAYING' | 'PLAYLIST_ORDER' | 'PLAY_COUNT' | 'DURATION'
+type CustomColumnKey = 'CURRENTLY_PLAYING' | 'PLAYLIST_ORDER' | 'PLAY_COUNT' | 'DURATION' | 'DATE_ADDED' | 'LAST_PLAYED'
 
 export const ALL_TRACK_LIST_COLUMNS: Record<Id3FrameId | CustomColumnKey, TrackListColumn> = $defu(
   {
@@ -19,12 +19,28 @@ export const ALL_TRACK_LIST_COLUMNS: Record<Id3FrameId | CustomColumnKey, TrackL
       minSize: 1.5,
       special: true,
     },
+    DATE_ADDED: {
+      canSort: true,
+      hideLabelInColumn: false,
+      key: 'DATE_ADDED',
+      label: 'Date added',
+      minSize: 3,
+      special: true,
+    },
     DURATION: {
       canSort: true,
       hideLabelInColumn: false,
       key: 'DURATION',
       label: 'Duration',
       minSize: 1.5,
+      special: true,
+    },
+    LAST_PLAYED: {
+      canSort: true,
+      hideLabelInColumn: false,
+      key: 'LAST_PLAYED',
+      label: 'Last played',
+      minSize: 3,
       special: true,
     },
     PLAY_COUNT: {

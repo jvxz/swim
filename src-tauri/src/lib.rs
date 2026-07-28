@@ -170,6 +170,18 @@ pub async fn run() {
     ",
       version: 9,
     },
+    Migration {
+      kind: MigrationKind::Up,
+      description: "add date_added and last_played to library_tracks",
+      // SQLite rejects a non-constant DEFAULT on ADD COLUMN, so existing rows are
+      // backfilled separately; new rows get date_added from the insert site.
+      sql: "
+          ALTER TABLE library_tracks ADD COLUMN date_added DATETIME;
+          ALTER TABLE library_tracks ADD COLUMN last_played DATETIME;
+          UPDATE library_tracks SET date_added = CURRENT_TIMESTAMP WHERE date_added IS NULL;
+    ",
+      version: 10,
+    },
   ];
 
   let rpc_builder = tauri_specta::Builder::<tauri::Wry>::new().commands(collect_commands![
