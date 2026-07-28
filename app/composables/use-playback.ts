@@ -25,6 +25,19 @@ export const usePlayback = createSharedComposable(() => {
     return { ...fileEntry, ..._currentTrackContext.value, tags: { ...fileEntry.tags } }
   })
 
+  // the track list the current track was played from — the source for next/previous
+  const _playbackList = shallowRef<TrackListEntry[]>([])
+  const _currentIndex = computed(() => {
+    const current = _currentTrackContext.value
+    if (!current) return -1
+
+    return _playbackList.value.findIndex((entry) => entry.path === current.path)
+  })
+  const hasPreviousTrack = computed(() => _currentIndex.value > 0)
+  const hasNextTrack = computed(
+    () => _currentIndex.value >= 0 && _currentIndex.value < _playbackList.value.length - 1,
+  )
+
   let timeListenedMs = 0
   let hasScrobbled = false
   const canScrobble = () => {
@@ -125,7 +138,9 @@ export const usePlayback = createSharedComposable(() => {
     _playbackStatus.value = await $invoke(commands.controlPlayback, action)
   }
 
-  async function playTrack(entry: TrackListEntry) {
+  async function playTrack(entry: TrackListEntry, list?: TrackListEntry[]) {
+    if (list) _playbackList.value = list
+
     // scrobble previous track if not already scrobbled
     if (_currentTrackContext.value && _playbackStatus.value && canScrobble()) {
       scrobbleTrack(_currentTrackContext.value, _playbackStatus.value.duration)
@@ -191,6 +206,15 @@ export const usePlayback = createSharedComposable(() => {
     resumeDurationTimer()
   }
 
+  async function skipTrack(offset: 1 | -1) {
+    if (_currentIndex.value === -1) return
+
+    const entry = _playbackList.value[_currentIndex.value + offset]
+    if (!entry) return
+
+    await playTrack(entry)
+  }
+
   async function resetPlayback() {
     const status = await $invoke(commands.controlPlayback, 'Reset')
     _playbackStatus.value = status
@@ -239,6 +263,8 @@ export const usePlayback = createSharedComposable(() => {
 
   return {
     currentTrack,
+    hasNextTrack,
+    hasPreviousTrack,
     playbackStatus,
     playPauseCurrentTrack,
     playTrack,
@@ -246,6 +272,7 @@ export const usePlayback = createSharedComposable(() => {
     seekCurrentTrack,
     setLoop,
     setVolume,
+    skipTrack,
     toggleMute,
   }
 })

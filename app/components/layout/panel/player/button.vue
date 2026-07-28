@@ -13,7 +13,12 @@ const props = withDefaults(
 <template>
   <button
     v-if="variant === 'sub'"
-    :class="cn('flex size-8 items-center justify-center active:text-muted-foreground', props.class)"
+    :class="
+      cn(
+        'flex size-8 items-center justify-center active:text-muted-foreground disabled:opacity-40 disabled:active:text-inherit',
+        props.class,
+      )
+    "
   >
     <slot />
   </button>

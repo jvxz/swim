@@ -3,7 +3,8 @@ const props = defineProps<{
   class?: string
 }>()
 
-const { playbackStatus, playPauseCurrentTrack } = usePlayback()
+const { hasNextTrack, hasPreviousTrack, playbackStatus, playPauseCurrentTrack, skipTrack } =
+  usePlayback()
 </script>
 
 <template>
@@ -16,7 +17,11 @@ const { playbackStatus, playPauseCurrentTrack } = usePlayback()
       />
     </LayoutPanelPlayerButton>
     <!-- skip back -->
-    <LayoutPanelPlayerButton>
+    <LayoutPanelPlayerButton
+      :disabled="!hasPreviousTrack"
+      aria-label="Previous track"
+      @click="skipTrack(-1)"
+    >
       <Icon
         name="tabler:player-skip-back-filled"
         class="size-5!"
@@ -35,7 +40,11 @@ const { playbackStatus, playPauseCurrentTrack } = usePlayback()
       />
     </LayoutPanelPlayerButton>
     <!-- skip forward -->
-    <LayoutPanelPlayerButton>
+    <LayoutPanelPlayerButton
+      :disabled="!hasNextTrack"
+      aria-label="Next track"
+      @click="skipTrack(1)"
+    >
       <Icon
         name="tabler:player-skip-forward-filled"
         class="size-5!"
