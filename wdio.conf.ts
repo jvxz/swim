@@ -65,11 +65,15 @@ export const config: WebdriverIO.Config = {
     ui: 'bdd',
   },
   onPrepare: () => {
-    spawnSync('bun', ['run', 'tauri', 'build', '--debug', '--no-bundle'], {
+    const build = spawnSync('vp', ['run', 'tauri', 'build', '--debug', '--no-bundle'], {
       cwd: __dirname,
       shell: true,
       stdio: 'inherit',
     })
+
+    // without this the build failure surfaces later as an opaque
+    // "failed to execute child process" from tauri-driver
+    if (build.status !== 0) throw new Error(`tauri build failed with status ${build.status}`)
   },
   port: 4444,
   reporters: ['spec'],
