@@ -53,18 +53,25 @@ bd close <id>         # Complete work
 
 ## Build & Test
 
-_Add your build and test commands here_
+Package manager is **bun** — `preinstall` runs `only-allow bun`, so npm/pnpm/yarn will fail.
 
 ```bash
-# Example:
-# npm install
-# npm test
+bun install       # deps (postinstall runs `nuxt prepare`)
+bun run dev       # tauri dev (Nuxt + Rust)
+bun run lint      # eslint .
+bun run test      # vitest
+bun run test:e2e  # wdio (needs a built binary)
+bun run build     # scripts/build.sh
+bun run db:types  # regenerate app/types/db.ts via kysely-codegen
 ```
+
+Quality gate before closing an issue: `bun run lint && bun run test`.
 
 ## Architecture Overview
 
-_Add a brief overview of your project architecture_
+See [AGENTS.md](AGENTS.md) — stack, per-platform webview differences, module map, and
+the performance/security priorities. Read it before your first edit.
 
 ## Conventions & Patterns
 
-_Add your project-specific conventions here_
+See [.cursorrules](.cursorrules) (422 lines) for Nuxt/Vue/UnoCSS/Reka UI conventions.
