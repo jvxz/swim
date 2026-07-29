@@ -24,7 +24,7 @@ const dupeCount = computed(() =>
  */
 async function hashGroups(tracks: FileEntry[]) {
   const hash = await getHasher()
-  const buckets = new Map<string, { track: FileEntry, bytes: Uint8Array }[]>()
+  const buckets = new Map<string, { track: FileEntry; bytes: Uint8Array }[]>()
   const BATCH = 8
 
   for (let i = 0; i < tracks.length; i += BATCH) {
@@ -48,7 +48,7 @@ async function hashGroups(tracks: FileEntry[]) {
 
   const groups: DuplicateGroup[] = []
   for (const [key, bucket] of buckets) {
-    const confirmed: { track: FileEntry, bytes: Uint8Array }[][] = []
+    const confirmed: { track: FileEntry; bytes: Uint8Array }[][] = []
     for (const entry of bucket) {
       const match = confirmed.find((group) => bytesEqual(group[0]!.bytes, entry.bytes))
       if (match) match.push(entry)
