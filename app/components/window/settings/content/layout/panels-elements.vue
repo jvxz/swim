@@ -7,7 +7,7 @@ const props = defineProps<{
 
 const settings = useSettings()
 const { elementDraggingData, isElementAllowedInPanel, openElementWindow, removeElementFromPanel } =
-  useLayout()
+  usePanelLayout()
 
 function hasSettings(elementKey: LayoutElementKey) {
   const obj = defaultLayoutElementSettings[elementKey]

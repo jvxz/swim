@@ -8,7 +8,7 @@ const props = defineProps<
   } & SplitterGroupProps
 >()
 
-const { handlePanelElementsSizeChange } = useLayout()
+const { handlePanelElementsSizeChange } = usePanelLayout()
 const settings = useSettings()
 </script>
 

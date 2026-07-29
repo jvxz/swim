@@ -1,4 +1,4 @@
-export function useLayout() {
+export function usePanelLayout() {
   const settings = useSettings()
 
   const elementDraggingData = useState<{
