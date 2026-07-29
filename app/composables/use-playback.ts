@@ -209,6 +209,11 @@ export const usePlayback = createSharedComposable(() => {
   async function skipTrack(offset: 1 | -1) {
     if (_currentIndex.value === -1) return
 
+    if (offset === -1 && (_playbackStatus.value?.position ?? 0) > 3) {
+      await seekCurrentTrack(0)
+      return
+    }
+
     const entry = _playbackList.value[_currentIndex.value + offset]
     if (!entry) return
 

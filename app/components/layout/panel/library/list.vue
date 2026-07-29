@@ -59,6 +59,12 @@ const treeItems = computed<TreeItem[]>(() => [
     type: 'item',
   },
   {
+    icon: 'tabler:copy',
+    onClick: () => navigateTo('/duplicates'),
+    title: 'Duplicates',
+    type: 'item',
+  },
+  {
     children: playlists.value.map((playlist) => ({
       title: playlist.name,
       ...playlist,
