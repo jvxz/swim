@@ -3,17 +3,28 @@ const props = defineProps<{
   class?: string
 }>()
 
-const { hasNextTrack, hasPreviousTrack, playbackStatus, playPauseCurrentTrack, skipTrack } =
-  usePlayback()
+const {
+  hasNextTrack,
+  hasPreviousTrack,
+  isShuffled,
+  playbackStatus,
+  playPauseCurrentTrack,
+  skipTrack,
+  toggleShuffle,
+} = usePlayback()
 </script>
 
 <template>
   <div :class="cn('flex items-center justify-center gap-3', props.class)">
     <!-- shuffle -->
-    <LayoutPanelPlayerButton>
+    <LayoutPanelPlayerButton
+      :aria-pressed="isShuffled"
+      aria-label="Shuffle"
+      @click="toggleShuffle()"
+    >
       <Icon
         name="tabler:arrows-shuffle"
-        class="size-5!"
+        :class="cn('size-5!', isShuffled && 'text-primary')"
       />
     </LayoutPanelPlayerButton>
     <!-- skip back -->

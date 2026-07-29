@@ -38,6 +38,35 @@ export const usePlayback = createSharedComposable(() => {
     () => _currentIndex.value >= 0 && _currentIndex.value < _playbackList.value.length - 1,
   )
 
+  const _isShuffled = ref((prefs.get('shuffle-enabled') as boolean | null) ?? false)
+  const isShuffled = readonly(_isShuffled)
+  // the pre-shuffle order of _playbackList, so turning shuffle off restores it
+  let _unshuffledList: TrackListEntry[] = []
+
+  // reshuffles what comes after `fromIndex`, leaving already-played tracks where they are
+  function shuffleUpcoming(list: TrackListEntry[], fromIndex: number) {
+    const shuffled = [...list]
+
+    for (let i = shuffled.length - 1; i > fromIndex + 1; i--) {
+      const j = fromIndex + 1 + Math.floor(Math.random() * (i - fromIndex))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!]
+    }
+
+    return shuffled
+  }
+
+  function toggleShuffle() {
+    _isShuffled.value = !_isShuffled.value
+
+    if (_isShuffled.value) {
+      _unshuffledList = _playbackList.value
+      _playbackList.value = shuffleUpcoming(_playbackList.value, _currentIndex.value)
+    } else {
+      if (_unshuffledList.length) _playbackList.value = _unshuffledList
+      _unshuffledList = []
+    }
+  }
+
   let timeListenedMs = 0
   let hasScrobbled = false
   const canScrobble = () => {
@@ -139,7 +168,15 @@ export const usePlayback = createSharedComposable(() => {
   }
 
   async function playTrack(entry: TrackListEntry, list?: TrackListEntry[]) {
-    if (list) _playbackList.value = list
+    if (list) {
+      _unshuffledList = _isShuffled.value ? list : []
+      _playbackList.value = _isShuffled.value
+        ? shuffleUpcoming(
+            list,
+            list.findIndex((item) => item.path === entry.path),
+          )
+        : list
+    }
 
     // scrobble previous track if not already scrobbled
     if (_currentTrackContext.value && _playbackStatus.value && canScrobble()) {
@@ -265,11 +302,13 @@ export const usePlayback = createSharedComposable(() => {
   watchDebounced(currentTrack, () => store.set('current-track', currentTrack.value), {
     debounce: 500,
   })
+  watch(_isShuffled, () => store.set('shuffle-enabled', _isShuffled.value))
 
   return {
     currentTrack,
     hasNextTrack,
     hasPreviousTrack,
+    isShuffled,
     playbackStatus,
     playPauseCurrentTrack,
     playTrack,
@@ -279,5 +318,6 @@ export const usePlayback = createSharedComposable(() => {
     setVolume,
     skipTrack,
     toggleMute,
+    toggleShuffle,
   }
 })
