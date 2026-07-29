@@ -83,17 +83,24 @@ fn create_audio_manager(device_name: Option<&str>) -> Result<(AudioManager<Defau
 }
 
 /// Recreates the current handle on a freshly (re)created audio manager,
-/// resuming at the same track/position/volume/loop state.
+/// resuming at the same track/position/volume/loop state. If the track
+/// has since disappeared from disk, resets playback state instead of
+/// silently dropping the handle so the frontend doesn't show a phantom
+/// "playing" track with no audio.
 fn reload_handle(
   audio_manager: &mut AudioManager<DefaultBackend>,
-  state: &StreamStatus,
+  state: &mut StreamStatus,
   loader_tx: &std::sync::mpsc::Sender<(i32, String)>,
   static_sound_id: &mut i32,
 ) -> Result<CurrentHandle> {
-  let Some(path) = state.path.as_ref() else {
+  let Some(path) = state.path.clone() else {
     return Ok(CurrentHandle::None);
   };
-  if !std::path::Path::new(path).is_file() {
+  if !std::path::Path::new(&path).is_file() {
+    state.path = None;
+    state.is_playing = false;
+    state.duration = 0.0;
+    state.position = 0.0;
     return Ok(CurrentHandle::None);
   }
 
@@ -125,22 +132,36 @@ fn reload_handle(
   Ok(handle)
 }
 
-/// Switches the active output device, preserving current playback state.
-/// Leaves the existing manager/handle untouched if the switch fails, so a
-/// bad selection doesn't interrupt whatever is already playing.
+/// Switches the active output device, preserving current playback state
+/// (including live position, so switching mid-playback doesn't rewind).
+/// Leaves the existing manager/handle/state untouched if the switch fails,
+/// so a bad selection doesn't interrupt whatever is already playing.
+/// Updates `state.output_device` to the device actually applied on success.
 fn switch_output_device(
   audio_manager: &mut AudioManager<DefaultBackend>,
   audio_handle: &mut CurrentHandle,
   device_name: Option<&str>,
-  state: &StreamStatus,
+  state: &mut StreamStatus,
   loader_tx: &std::sync::mpsc::Sender<(i32, String)>,
   static_sound_id: &mut i32,
 ) -> Result<bool> {
   let (mut new_manager, used_custom_device) = create_audio_manager(device_name)?;
-  let new_handle = reload_handle(&mut new_manager, state, loader_tx, static_sound_id)?;
+
+  let live_position = audio_handle.position();
+  let mut new_state = state.clone();
+  new_state.position = live_position;
+
+  let new_handle = reload_handle(&mut new_manager, &mut new_state, loader_tx, static_sound_id)?;
+
+  new_state.output_device = if used_custom_device {
+    device_name.map(str::to_string)
+  } else {
+    None
+  };
 
   *audio_manager = new_manager;
   *audio_handle = new_handle;
+  *state = new_state;
 
   Ok(used_custom_device)
 }
@@ -280,6 +301,7 @@ pub fn spawn_audio_thread(
       Ok(result) => result,
       Err(e) => {
         emit_error(app_handle.clone(), e);
+        let _ = app_handle.emit("output-device-fallback", ());
         (create_audio_manager(None)?.0, false)
       }
     };
@@ -311,7 +333,15 @@ pub fn spawn_audio_thread(
     path: None,
     volume: -10.0,
     is_muted: false,
+    output_device: None,
   });
+  // authoritative: reflects the device actually applied above, clearing out
+  // a stale/unavailable selection rather than trusting the persisted value
+  state.output_device = if using_custom_device {
+    initial_device.clone()
+  } else {
+    None
+  };
 
   // load track if initial state has path
   if let Some(path) = &state.path {
@@ -516,7 +546,7 @@ pub fn spawn_audio_thread(
               &mut audio_manager,
               &mut audio_handle,
               device_name.as_deref(),
-              &state,
+              &mut state,
               &loader_tx,
               &mut static_sound_id,
             ) {
@@ -548,6 +578,7 @@ pub fn spawn_audio_thread(
 
           if lost_device {
             using_custom_device = false;
+            state.output_device = None;
             log::warn!("output device disconnected, reverted to system default");
             let _ = app_handle.emit("output-device-fallback", ());
           }

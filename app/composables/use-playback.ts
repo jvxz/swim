@@ -17,8 +17,10 @@ export const usePlayback = createSharedComposable(() => {
     prefs.get('current-track') as CurrentPlayingTrack | null,
   )
 
-  const _outputDevice = ref<string | null>((prefs.get('output-device') as string | null) ?? null)
-  const outputDevice = readonly(_outputDevice)
+  // derived from playbackStatus (backend-authoritative) rather than tracked
+  // separately, so a failed/fallback device switch never shows a selection
+  // that was never actually applied
+  const outputDevice = computed(() => _playbackStatus.value?.output_device ?? null)
   const outputDevices = ref<AudioDeviceInfo[]>([])
 
   async function refreshOutputDevices() {
@@ -26,17 +28,13 @@ export const usePlayback = createSharedComposable(() => {
   }
 
   async function setOutputDevice(deviceName: string | null) {
-    await $invoke(commands.controlPlayback, {
+    _playbackStatus.value = await $invoke(commands.controlPlayback, {
       SetOutputDevice: deviceName,
     })
-
-    _outputDevice.value = deviceName
-    store.set('output-device', deviceName)
   }
 
   listen('output-device-fallback', () => {
-    _outputDevice.value = null
-    store.set('output-device', null)
+    if (_playbackStatus.value) _playbackStatus.value.output_device = null
     emitError({
       data: 'Selected output device disconnected, reverted to system default',
       type: 'Audio',

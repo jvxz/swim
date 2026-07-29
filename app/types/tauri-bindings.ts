@@ -170,7 +170,7 @@ export type SerializedOfflineScrobble = { scrobble: SerializedScrobble; timestam
 export type SerializedScrobble = { artist: string; track: string; album: string | null; track_number: number | null; duration: number; album_artist: string | null }
 export type SerializedScrobbleResponse = { accepted: number; ignored: number }
 export type StreamAction = { Play: string } | "Pause" | "Resume" | { Seek: number } | { SetLoop: boolean } | { SetVolume: number } | "ToggleMute" | "Reset" | { SetOutputDevice: string | null }
-export type StreamStatus = { is_playing: boolean; position: number; duration: number; is_looping: boolean; path: string | null; volume: number; is_muted: boolean }
+export type StreamStatus = { is_playing: boolean; position: number; duration: number; is_looping: boolean; path: string | null; volume: number; is_muted: boolean; output_device: string | null }
 export type TagTypeArg = "id3v2.2" | "id3v2.3" | "id3v2.4"
 export type Track = { playcount: string }
 

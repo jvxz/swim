@@ -289,7 +289,7 @@ pub async fn run() {
       app.manage(AudioHandle { tx });
 
       let initial_state = get_initial_state(app.app_handle())?;
-      let initial_device = get_initial_output_device(app.app_handle())?;
+      let initial_device = initial_state.as_ref().and_then(|s| s.output_device.clone());
       let audio_thread_app_handle = app.app_handle().clone();
       let _ = std::thread::spawn(move || {
         if let Err(e) =
@@ -382,16 +382,4 @@ fn get_initial_state<R: Runtime>(app_handle: &AppHandle<R>) -> Result<Option<Str
   };
 
   return Ok(Some(initial_state));
-}
-
-fn get_initial_output_device<R: Runtime>(app_handle: &AppHandle<R>) -> Result<Option<String>> {
-  let store = match app_handle.store("prefs.json") {
-    Ok(store) => store,
-    Err(_) => return Ok(None),
-  };
-  let Some(device_name) = store.get("output-device") else {
-    return Ok(None);
-  };
-
-  Ok(serde_json::from_value::<Option<String>>(device_name).unwrap_or(None))
 }

@@ -31,6 +31,12 @@ pub struct StreamStatus {
   pub path: Option<String>,
   pub volume: f32,
   pub is_muted: bool,
+  /// The currently-active output device, or `None` for the system default.
+  /// Authoritative: only ever set to the device that's actually in use.
+  /// `#[serde(default)]` so playback state persisted before this field
+  /// existed still deserializes instead of being discarded wholesale.
+  #[serde(default)]
+  pub output_device: Option<String>,
 }
 
 #[tauri::command]
