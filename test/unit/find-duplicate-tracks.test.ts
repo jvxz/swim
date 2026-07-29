@@ -52,14 +52,14 @@ describe('metadataKey', () => {
 
 describe('durationKey', () => {
   it('rounds duration to the nearest second', () => {
-    const a = track({ path: 'a', tags: { TIT2: 't' }, duration: 180_400 })
-    const b = track({ path: 'b', tags: { TIT2: 't' }, duration: 180_100 })
+    const a = track({ path: 'a', tags: { TIT2: 't' }, duration: 180.4 })
+    const b = track({ path: 'b', tags: { TIT2: 't' }, duration: 180.1 })
     expect(durationKey(a)).toBe(durationKey(b))
   })
 
   it('distinguishes different durations', () => {
-    const a = track({ path: 'a', tags: { TIT2: 't' }, duration: 180_000 })
-    const b = track({ path: 'b', tags: { TIT2: 't' }, duration: 200_000 })
+    const a = track({ path: 'a', tags: { TIT2: 't' }, duration: 180 })
+    const b = track({ path: 'b', tags: { TIT2: 't' }, duration: 200 })
     expect(durationKey(a)).not.toBe(durationKey(b))
   })
 })

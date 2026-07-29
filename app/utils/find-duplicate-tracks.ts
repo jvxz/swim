@@ -18,7 +18,7 @@ export function metadataKey(track: FileEntry) {
 
 /** Match on artist + title + duration (rounded to the second). */
 export function durationKey(track: FileEntry) {
-  return [norm(track.tags.TPE1), titleOf(track), Math.round(track.duration / 1000)].join(SEP)
+  return [norm(track.tags.TPE1), titleOf(track), Math.round(track.duration)].join(SEP)
 }
 
 /**

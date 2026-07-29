@@ -144,7 +144,7 @@ async function scan() {
             </span>
           </div>
           <span class="text-xs text-muted-foreground shrink-0 tabular-nums">
-            {{ formatDuration(track.duration) }}
+            {{ formatDuration(track.duration, 'seconds') }}
           </span>
           <UButton
             variant="ghost"
