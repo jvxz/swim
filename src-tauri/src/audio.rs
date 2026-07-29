@@ -300,8 +300,11 @@ pub fn spawn_audio_thread(
     match create_audio_manager(initial_device.as_deref()) {
       Ok(result) => result,
       Err(e) => {
+        // no listener can reliably be registered on the frontend this early
+        // (the webview may not have loaded yet), so correctness here comes
+        // from `state.output_device` below plus the `GetStatus` query the
+        // frontend runs on mount — not from a fire-and-forget event
         emit_error(app_handle.clone(), e);
-        let _ = app_handle.emit("output-device-fallback", ());
         (create_audio_manager(None)?.0, false)
       }
     };
@@ -554,6 +557,9 @@ pub fn spawn_audio_thread(
               Err(e) => emit_error(app_handle.clone(), e),
             }
 
+            let _ = response_tx.send(state.clone());
+          }
+          StreamAction::GetStatus => {
             let _ = response_tx.send(state.clone());
           }
         }

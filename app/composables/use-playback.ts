@@ -13,6 +13,15 @@ export const usePlayback = createSharedComposable(() => {
   // public
   const playbackStatus = readonly(_playbackStatus)
 
+  // the cached value above can be stale (e.g. it still names an output
+  // device the backend fell back away from during its own startup, before
+  // this listener could exist) — GetStatus round-trips through the same
+  // channel the audio thread's startup logic runs on before servicing any
+  // request, so the response is guaranteed authoritative
+  $invoke(commands.controlPlayback, 'GetStatus').then((status) => {
+    _playbackStatus.value = status
+  })
+
   const _currentTrackContext = shallowRef<CurrentPlayingTrack | null>(
     prefs.get('current-track') as CurrentPlayingTrack | null,
   )

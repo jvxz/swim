@@ -20,6 +20,13 @@ pub enum StreamAction {
   ToggleMute,
   Reset,
   SetOutputDevice(Option<String>),
+  /// Query-only: returns current state without changing anything. Since
+  /// this round-trips through the same channel the audio thread's startup
+  /// logic runs on before it starts servicing requests, the response is
+  /// guaranteed to reflect e.g. a startup device fallback already applied
+  /// on this thread — unlike a fire-and-forget event, which can fire before
+  /// a listener has been registered.
+  GetStatus,
 }
 
 #[derive(Serialize, Clone, Deserialize, Type, Debug)]
