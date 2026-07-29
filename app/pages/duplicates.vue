@@ -16,26 +16,30 @@ const dupeCount = computed(() =>
   (groups.value ?? []).reduce((total, group) => total + group.tracks.length, 0),
 )
 
+const bytesEqual = (a: Uint8Array, b: Uint8Array) =>
+  a.length === b.length && a.every((byte, i) => byte === b[i])
+
 /**
  * Hash file contents with bounded concurrency so a large library can't exhaust
- * file handles. The 32-bit hash is only a bucketing pre-filter — within a
- * bucket, contents are compared byte-for-byte before being treated as
- * duplicates, since a hash collision would otherwise mislabel distinct files.
+ * file handles. Bytes are discarded right after hashing — only the hash is
+ * kept per track. The 32-bit hash is a bucketing pre-filter, so buckets with
+ * more than one track are re-read and compared byte-for-byte before being
+ * treated as duplicates, since a hash collision would otherwise mislabel
+ * distinct files.
  */
 async function hashGroups(tracks: FileEntry[]) {
   const hash = await getHasher()
-  const buckets = new Map<string, { track: FileEntry; bytes: Uint8Array }[]>()
+  const buckets = new Map<string, FileEntry[]>()
   const BATCH = 8
 
   for (let i = 0; i < tracks.length; i += BATCH) {
     await Promise.all(
       tracks.slice(i, i + BATCH).map(async (track) => {
         try {
-          const bytes = await readFile(track.path)
-          const key = String(hash(bytes))
+          const key = String(hash(await readFile(track.path)))
           const bucket = buckets.get(key)
-          if (bucket) bucket.push({ bytes, track })
-          else buckets.set(key, [{ bytes, track }])
+          if (bucket) bucket.push(track)
+          else buckets.set(key, [track])
         } catch {
           // unreadable file → excluded from grouping
         }
@@ -43,16 +47,20 @@ async function hashGroups(tracks: FileEntry[]) {
     )
   }
 
-  const bytesEqual = (a: Uint8Array, b: Uint8Array) =>
-    a.length === b.length && a.every((byte, i) => byte === b[i])
-
   const groups: DuplicateGroup[] = []
   for (const [key, bucket] of buckets) {
-    const confirmed: { track: FileEntry; bytes: Uint8Array }[][] = []
-    for (const entry of bucket) {
-      const match = confirmed.find((group) => bytesEqual(group[0]!.bytes, entry.bytes))
-      if (match) match.push(entry)
-      else confirmed.push([entry])
+    if (bucket.length < 2) continue
+
+    const confirmed: { bytes: Uint8Array, track: FileEntry }[][] = []
+    for (const track of bucket) {
+      try {
+        const bytes = await readFile(track.path)
+        const match = confirmed.find((group) => bytesEqual(group[0]!.bytes, bytes))
+        if (match) match.push({ bytes, track })
+        else confirmed.push([{ bytes, track }])
+      } catch {
+        // unreadable file → excluded from grouping
+      }
     }
 
     confirmed
