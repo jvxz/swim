@@ -51,7 +51,7 @@ async function hashGroups(tracks: FileEntry[]) {
   for (const [key, bucket] of buckets) {
     if (bucket.length < 2) continue
 
-    const confirmed: { bytes: Uint8Array, tracks: FileEntry[] }[] = []
+    const confirmed: { bytes: Uint8Array; tracks: FileEntry[] }[] = []
     for (const track of bucket) {
       try {
         const bytes = await readFile(track.path)
