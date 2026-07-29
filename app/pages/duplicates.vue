@@ -51,23 +51,21 @@ async function hashGroups(tracks: FileEntry[]) {
   for (const [key, bucket] of buckets) {
     if (bucket.length < 2) continue
 
-    const confirmed: { bytes: Uint8Array; track: FileEntry }[][] = []
+    const confirmed: { bytes: Uint8Array, tracks: FileEntry[] }[] = []
     for (const track of bucket) {
       try {
         const bytes = await readFile(track.path)
-        const match = confirmed.find((group) => bytesEqual(group[0]!.bytes, bytes))
-        if (match) match.push({ bytes, track })
-        else confirmed.push([{ bytes, track }])
+        const match = confirmed.find((group) => bytesEqual(group.bytes, bytes))
+        if (match) match.tracks.push(track)
+        else confirmed.push({ bytes, tracks: [track] })
       } catch {
         // unreadable file → excluded from grouping
       }
     }
 
     confirmed
-      .filter((group) => group.length > 1)
-      .forEach((group, i) =>
-        groups.push({ key: `${key}:${i}`, tracks: group.map((entry) => entry.track) }),
-      )
+      .filter((group) => group.tracks.length > 1)
+      .forEach((group, i) => groups.push({ key: `${key}:${i}`, tracks: group.tracks }))
   }
 
   return groups
