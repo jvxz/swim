@@ -14,17 +14,27 @@ definePageMeta({
 })
 
 const route = useRoute()
-const id = 'id' in route.params ? Number(route.params.id) : 0
+const id = computed(() => ('id' in route.params ? Number(route.params.id) : 0))
 
 const trackListInput = useTrackListInput()
 
 onMounted(() => {
   trackListInput.value = {
     ...trackListInput.value,
-    path: id.toString(),
+    path: id.value.toString(),
     type: 'playlist',
   }
 })
+
+const { addToPlaylist } = useUserPlaylists()
+const { getTracksData } = useTrackData()
+
+async function handleDrop(itemPaths: string[]) {
+  const tracks = await getTracksData(itemPaths)
+  const validTracks = tracks.filter((track) => track.valid)
+
+  if (validTracks.length > 0) await addToPlaylist(id.value, validTracks)
+}
 </script>
 
 <template>
@@ -32,10 +42,15 @@ onMounted(() => {
     v-if="id"
     class="flex-1"
   >
-    <LayoutTrackList
-      v-bind="trackListInput"
-      type="playlist"
-      :path="id.toString()"
-    />
+    <TauriDragoverProvider
+      :acceptable-keys="['track-list-entry', 'UNKNOWN']"
+      @drop="handleDrop"
+    >
+      <LayoutTrackList
+        v-bind="trackListInput"
+        type="playlist"
+        :path="id.toString()"
+      />
+    </TauriDragoverProvider>
   </div>
 </template>
