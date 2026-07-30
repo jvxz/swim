@@ -77,11 +77,6 @@ Quality gate before closing an issue: `vp check && vp run lint`.
 same-named scripts — use `vp run <script>` for `dev`, `build`, `generate` etc., which
 are Tauri/Nuxt commands, not Vite ones.
 
-`vue` is pinned to an exact `3.5.30`. On 3.5.40 `@vue/compiler-sfc` fails to resolve
-`interface X extends Omit<Y, …>` coming from reka-ui's bundled `.d.ts`, and the Nuxt
-build dies with seven "Failed to resolve extends base type" errors. Re-test before
-unpinning — see the beads issue for details.
-
 Linting is split deliberately:
 
 - `vite.config.ts` — oxfmt + oxlint config. oxfmt formats **every** file type,

@@ -104,7 +104,7 @@ const {
   pauseOnHover = false,
   play = true,
   speed = 50,
-  style = () => ({}),
+  style = {},
 } = defineProps<MarqueeProps>()
 
 const emit = defineEmits<{
