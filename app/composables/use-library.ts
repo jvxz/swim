@@ -29,10 +29,14 @@ export async function backfillTrackMetadata() {
     ),
   )
 
-  // getTracksData silently drops paths it couldn't read (e.g. an unavailable cloud
-  // file) - only mark done once every row was actually covered, so the rest get
-  // retried on the next pass instead of staying null forever.
-  if (entries.length === tracks.length) await metadataBackfillStore.set('done', true)
+  // getTracksData silently drops paths it couldn't read, and a cloud-only file that
+  // isn't downloaded yet comes back with empty tags rather than being dropped - only
+  // mark done once every row was actually read locally, so the rest get retried on
+  // the next pass instead of staying null forever.
+  const fullyCovered =
+    entries.length === tracks.length && entries.every((entry) => entry.download_status === 'Local')
+
+  if (fullyCovered) await metadataBackfillStore.set('done', true)
 }
 
 export function useLibrary() {
