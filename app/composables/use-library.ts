@@ -76,7 +76,7 @@ export function useLibrary() {
         })
         .execute()
 
-      const folderTracks = await getFolderTracks(folderPath)
+      const folderTracks = await getFolderTracks(folderPath, true)
 
       await addTracksToLibrary(folderTracks, {
         id: folderPath,

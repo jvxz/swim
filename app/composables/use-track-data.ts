@@ -32,8 +32,8 @@ export const useTrackData = defineStore('track-data', () => {
     return track
   }
 
-  async function getFolderTracks(path: string) {
-    const paths = await $invoke(commands.getFolderTrackPaths, path, false)
+  async function getFolderTracks(path: string, deep = false) {
+    const paths = await $invoke(commands.getFolderTrackPaths, path, deep)
     return getTracksData(paths)
   }
 
