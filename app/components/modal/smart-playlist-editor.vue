@@ -8,10 +8,17 @@ const name = shallowRef('New smart playlist')
 const match = shallowRef<'all' | 'any'>('all')
 const rules = ref<SmartPlaylistRule[]>([])
 
+// guards against a slow load for one playlist landing after the dialog has
+// already been reopened for another (or closed and reopened for "new")
+let loadToken = 0
+
 watch(isOpen, async (open) => {
   if (!open) return
 
-  if (editingPlaylistId.value === null) {
+  const token = ++loadToken
+  const playlistId = editingPlaylistId.value
+
+  if (playlistId === null) {
     name.value = 'New smart playlist'
     match.value = 'all'
     rules.value = []
@@ -20,11 +27,11 @@ watch(isOpen, async (open) => {
 
   const playlist = await $db()
     .selectFrom('playlists')
-    .where('id', '=', editingPlaylistId.value)
+    .where('id', '=', playlistId)
     .select(['name', 'rules'])
     .executeTakeFirst()
 
-  if (!playlist) return
+  if (!playlist || token !== loadToken) return
 
   const group = parseSmartPlaylistRules(playlist.rules)
   name.value = playlist.name

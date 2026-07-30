@@ -53,6 +53,8 @@ export function useSmartPlaylists() {
     // an unconfigured smart playlist matches nothing, not the whole library
     if (rules.items.length === 0) return []
 
+    await backfillTrackMetadata()
+
     const rows = await $db()
       .selectFrom('library_tracks')
       .select('path')

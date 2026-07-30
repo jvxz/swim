@@ -1,8 +1,23 @@
-import type { ExpressionBuilder, ExpressionWrapper, SqlBool } from 'kysely'
+import type { Expression, ExpressionBuilder, SqlBool } from 'kysely'
 import { sql } from 'kysely'
 
 type LibraryTracksEb = ExpressionBuilder<DB, 'library_tracks'>
-type LibraryTracksExpr = ExpressionWrapper<DB, 'library_tracks', SqlBool>
+type LibraryTracksExpr = Expression<SqlBool>
+
+const LIKE_ESCAPE_CHAR = '\\'
+
+/** Escapes literal LIKE wildcards so e.g. "contains %" doesn't match everything. */
+function escapeLikeValue(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `${LIKE_ESCAPE_CHAR}${char}`)
+}
+
+function likeCondition(
+  eb: LibraryTracksEb,
+  field: SmartPlaylistFieldKey,
+  pattern: string,
+): LibraryTracksExpr {
+  return sql<boolean>`${eb.ref(field)} like ${pattern} escape ${LIKE_ESCAPE_CHAR}`
+}
 
 export function compileSmartPlaylistGroup(
   eb: LibraryTracksEb,
@@ -38,13 +53,13 @@ function compileTextRule(
     case 'is_not':
       return eb(field, '!=', value)
     case 'contains':
-      return eb(field, 'like', `%${value}%`)
+      return likeCondition(eb, field, `%${escapeLikeValue(value)}%`)
     case 'not_contains':
-      return eb.not(eb(field, 'like', `%${value}%`))
+      return eb.not(likeCondition(eb, field, `%${escapeLikeValue(value)}%`))
     case 'starts_with':
-      return eb(field, 'like', `${value}%`)
+      return likeCondition(eb, field, `${escapeLikeValue(value)}%`)
     case 'ends_with':
-      return eb(field, 'like', `%${value}`)
+      return likeCondition(eb, field, `%${escapeLikeValue(value)}`)
     case 'is_empty':
       return eb.or([eb(field, 'is', null), eb(field, '=', '')])
     case 'is_not_empty':

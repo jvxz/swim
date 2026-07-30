@@ -7,6 +7,31 @@ const LIBRARY_FOLDERS_CHANGED_EVENT = 'library-folders-changed'
 
 const metadataBackfillStore = new LazyStore('library-metadata-backfill.json')
 
+/** One-time pass populating genre/year/track_no/disc_no/composer/album_artist on rows
+ * inserted before those columns existed. New rows get them at insert time. Callable from
+ * anywhere that reads library_tracks (library view, smart playlists) so none of them can
+ * see stale/unbackfilled rows depending on which one happens to load first. */
+export async function backfillTrackMetadata() {
+  if (await metadataBackfillStore.get('done')) return
+
+  const { getTracksData } = useTrackData()
+  const tracks = await $db().selectFrom('library_tracks').select(['path']).execute()
+
+  const entries = await getTracksData(tracks.map((track) => track.path))
+
+  await Promise.all(
+    entries.map((entry) =>
+      $db()
+        .updateTable('library_tracks')
+        .set(getTrackMetadataFields(entry.tags))
+        .where('path', '=', entry.path)
+        .execute(),
+    ),
+  )
+
+  await metadataBackfillStore.set('done', true)
+}
+
 export function useLibrary() {
   const { getFolderTracks, getTracksData, refreshTrackData } = useTrackData()
 
@@ -16,28 +41,6 @@ export function useLibrary() {
     const tracks = await $db().selectFrom('library_tracks').selectAll().execute()
 
     return await getTracksData(tracks.map((track) => track.path))
-  }
-
-  /** One-time pass populating genre/year/track_no/disc_no/composer/album_artist on
-   * rows inserted before those columns existed. New rows get them at insert time. */
-  async function backfillTrackMetadata() {
-    if (await metadataBackfillStore.get('done')) return
-
-    const tracks = await $db().selectFrom('library_tracks').select(['path']).execute()
-
-    const entries = await getTracksData(tracks.map((track) => track.path))
-
-    await Promise.all(
-      entries.map((entry) =>
-        $db()
-          .updateTable('library_tracks')
-          .set(getTrackMetadataFields(entry.tags))
-          .where('path', '=', entry.path)
-          .execute(),
-      ),
-    )
-
-    await metadataBackfillStore.set('done', true)
   }
 
   const getLibraryFolders = () =>
