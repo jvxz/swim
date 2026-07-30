@@ -56,4 +56,13 @@ jobs:
         run: cargo install tauri-driver --locked
 
       - name: run tests
+        env:
+          # CI runners expose no real GPU to Xvfb, so WebKitGTK's DMA-BUF
+          # renderer intermittently fails to acquire a DRI3 device
+          # ("libEGL warning: DRI3 error: Could not get DRI3 device"),
+          # crashing the webview a few reloads into the startup stress test.
+          # Force software GL + WebKit's non-DMA-BUF path so rendering
+          # doesn't depend on runner GPU availability.
+          WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
         run: xvfb-run vp run test:e2e
