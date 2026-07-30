@@ -1,16 +1,43 @@
 import { emit } from '@tauri-apps/api/event'
+import { LazyStore } from '@tauri-apps/plugin-store'
 import { sql } from 'kysely'
 
 const LIBRARY_FOLDERS_KEY = 'library-folders'
 const LIBRARY_FOLDERS_CHANGED_EVENT = 'library-folders-changed'
 
+const metadataBackfillStore = new LazyStore('library-metadata-backfill.json')
+
 export function useLibrary() {
   const { getFolderTracks, getTracksData, refreshTrackData } = useTrackData()
 
   async function getLibraryTracks() {
+    await backfillTrackMetadata()
+
     const tracks = await $db().selectFrom('library_tracks').selectAll().execute()
 
     return await getTracksData(tracks.map((track) => track.path))
+  }
+
+  /** One-time pass populating genre/year/track_no/disc_no/composer/album_artist on
+   * rows inserted before those columns existed. New rows get them at insert time. */
+  async function backfillTrackMetadata() {
+    if (await metadataBackfillStore.get('done')) return
+
+    const tracks = await $db().selectFrom('library_tracks').select(['path']).execute()
+
+    const entries = await getTracksData(tracks.map((track) => track.path))
+
+    await Promise.all(
+      entries.map((entry) =>
+        $db()
+          .updateTable('library_tracks')
+          .set(getTrackMetadataFields(entry.tags))
+          .where('path', '=', entry.path)
+          .execute(),
+      ),
+    )
+
+    await metadataBackfillStore.set('done', true)
   }
 
   const getLibraryFolders = () =>
@@ -131,6 +158,7 @@ export function useLibrary() {
       .insertInto('library_tracks')
       .values(
         tracks.map((track) => ({
+          ...getTrackMetadataFields(track.tags),
           album: track.tags.TALB ?? null,
           artist: track.tags.TPE1 ?? null,
           date_added: sql<string>`CURRENT_TIMESTAMP`,

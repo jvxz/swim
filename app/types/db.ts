@@ -26,13 +26,19 @@ export interface LibraryFolders {
 
 export interface LibraryTracks {
   album: string | null;
+  album_artist: string | null;
   artist: string | null;
+  composer: string | null;
   date_added: string | null;
+  disc_no: number | null;
   filename: string;
+  genre: string | null;
   id: Generated<number>;
   last_played: string | null;
   path: string;
   title: string | null;
+  track_no: number | null;
+  year: number | null;
 }
 
 export interface LibraryTracksSource {

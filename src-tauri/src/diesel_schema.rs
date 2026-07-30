@@ -30,6 +30,12 @@ diesel::table! {
         album -> Nullable<Text>,
         date_added -> Nullable<Text>,
         last_played -> Nullable<Text>,
+        genre -> Nullable<Text>,
+        year -> Nullable<Integer>,
+        track_no -> Nullable<Integer>,
+        disc_no -> Nullable<Integer>,
+        composer -> Nullable<Text>,
+        album_artist -> Nullable<Text>,
     }
 }
 
