@@ -112,7 +112,7 @@ export function refreshTrackListForType(type: TrackListInput['type'], path?: str
 export function createTrackListInputKey(input: TrackListInput) {
   if (input.type === 'library') return `library-${input.sortBy}-${input.sortOrder}`
 
-  return `${input.type}-${input.path}-${input.sortBy}-${input.sortOrder}`
+  return `${input.type}-${input.path}-${input.deep ?? false}-${input.sortBy}-${input.sortOrder}`
 }
 
 if (import.meta.hot) import.meta.hot.accept(acceptHMRUpdate(useTrackData, import.meta.hot))

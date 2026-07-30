@@ -63,7 +63,7 @@ export function useLibrary() {
     )
 
   const { execute: addFolderToLibrary, isLoading: isAddingFolderToLibrary } = useAsyncState<void>(
-    async (folderPath: string, deep = false) => {
+    async (folderPath: string) => {
       const exists = await useTauriFsExists(folderPath)
       if (!exists)
         // TODO: show error toast
@@ -78,11 +78,10 @@ export function useLibrary() {
         .insertInto('library_folders')
         .values({
           path: folderPath,
-          recursive: deep ? 1 : 0,
         })
         .execute()
 
-      const folderTracks = await getFolderTracks(folderPath, deep)
+      const folderTracks = await getFolderTracks(folderPath)
 
       await addTracksToLibrary(folderTracks, {
         id: folderPath,
@@ -157,52 +156,6 @@ export function useLibrary() {
 
     // the tracks no longer have a date_added, so the cached file entries are stale
     await refreshTrackData(deletedTracks.map((track) => track.path))
-  }
-
-  /**
-   * Re-scans a folder already in the library at a new depth: tracks that fall out of scope
-   * are unlinked (and deleted if no other source references them), tracks newly in scope are
-   * added, and tracks that remain in scope are left untouched so their date_added/last_played
-   * survive the change.
-   */
-  async function setFolderScanDepth(folderPath: string, deep: boolean) {
-    await $db()
-      .updateTable('library_folders')
-      .set({ recursive: deep ? 1 : 0 })
-      .where('path', '=', folderPath)
-      .execute()
-
-    const currentTracks = await getFolderTracks(folderPath, deep)
-    const currentPaths = new Set(currentTracks.map((track) => track.path))
-
-    const linkedTracks = await $db()
-      .selectFrom('library_tracks_source')
-      .innerJoin('library_tracks', 'library_tracks.id', 'library_tracks_source.track_id')
-      .where('library_tracks_source.source_type', '=', 'folder')
-      .where('library_tracks_source.source_id', '=', folderPath)
-      .select(['library_tracks.id', 'library_tracks.path'])
-      .execute()
-
-    const staleTrackIds = linkedTracks
-      .filter((track) => !currentPaths.has(track.path))
-      .map((track) => track.id)
-
-    if (staleTrackIds.length > 0) {
-      for (const batch of chunk(staleTrackIds, LIBRARY_BATCH_SIZE)) {
-        await $db()
-          .deleteFrom('library_tracks_source')
-          .where('source_type', '=', 'folder')
-          .where('source_id', '=', folderPath)
-          .where('track_id', 'in', batch)
-          .execute()
-      }
-
-      await pruneUnreferencedTracks(staleTrackIds)
-    }
-
-    await addTracksToLibrary(currentTracks, { id: folderPath, type: 'folder' })
-
-    void emit(LIBRARY_FOLDERS_CHANGED_EVENT)
   }
 
   const useFolderInLibrary = (folderPath: string) =>
@@ -327,7 +280,6 @@ export function useLibrary() {
     isRemovingFolderFromLibrary,
     markTrackPlayed,
     removeFolderFromLibrary,
-    setFolderScanDepth,
     useFolderInLibrary,
   }
 }

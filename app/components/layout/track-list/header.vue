@@ -9,6 +9,7 @@ const props = defineProps<{
 const { deletePlaylist, exportPlaylistAsM3u, getPlaylistName } = useUserPlaylists()
 const { addFolderToLibrary, removeFolderFromLibrary, useFolderInLibrary } = useLibrary()
 const query = useTrackListSearchQuery()
+const trackListInput = useTrackListInput()
 
 const isLoading = toRef(props, 'isLoading')
 
@@ -76,6 +77,10 @@ const title = computed(() => {
 
   return getPlaylistName(Number(props.path))
 })
+
+function setIncludeSubfolders(checked: boolean) {
+  trackListInput.value = { ...trackListInput.value, deep: checked }
+}
 </script>
 
 <template>
@@ -124,14 +129,18 @@ const title = computed(() => {
         </UDropdownMenuTrigger>
         <UDropdownMenuContent align="end">
           <template v-if="type === 'folder'">
-            <template v-if="!isFolderInLibrary">
-              <UDropdownMenuItem @click="addFolderToLibrary(0, path, false)">
-                Add to library
-              </UDropdownMenuItem>
-              <UDropdownMenuItem @click="addFolderToLibrary(0, path, true)">
-                Add to library (include subfolders)
-              </UDropdownMenuItem>
-            </template>
+            <UDropdownMenuCheckboxItem
+              :checked="!!trackListInput.deep"
+              @update:checked="setIncludeSubfolders"
+            >
+              Include subfolders
+            </UDropdownMenuCheckboxItem>
+            <UDropdownMenuItem
+              v-if="!isFolderInLibrary"
+              @click="addFolderToLibrary(0, path)"
+            >
+              Add to library
+            </UDropdownMenuItem>
             <UDropdownMenuItem
               v-else
               @click="removeFolderFromLibrary(0, path)"

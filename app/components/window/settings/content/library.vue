@@ -3,13 +3,11 @@ import { open as openFilePicker } from '@tauri-apps/plugin-dialog'
 import type { AcceptableValue } from 'reka-ui'
 
 const { copy } = useClipboard()
-const { addFolderToLibrary, getLibraryFolders, removeFolderFromLibrary, setFolderScanDepth } =
-  useLibrary()
+const { addFolderToLibrary, getLibraryFolders, removeFolderFromLibrary } = useLibrary()
 
 const { data: folders } = getLibraryFolders()
 
 const selectedFolder = shallowRef<AcceptableValue>(null)
-const scanSubfolders = shallowRef(false)
 
 function handleRemoveFolder(folderPath: AcceptableValue) {
   removeFolderFromLibrary(0, folderPath)
@@ -20,11 +18,11 @@ async function handleAddFolder() {
   const folderPath = await openFilePicker({
     directory: true,
   })
-  if (folderPath) addFolderToLibrary(0, folderPath, scanSubfolders.value)
+  if (folderPath) addFolderToLibrary(0, folderPath)
 }
 
 async function handleDrop(folderPaths: string[]) {
-  await addFolderToLibrary(0, folderPaths[0], scanSubfolders.value)
+  await addFolderToLibrary(0, folderPaths[0])
 }
 </script>
 
@@ -67,12 +65,6 @@ async function handleDrop(folderPaths: string[]) {
               </UContextMenuTrigger>
               <UContextMenuContent>
                 <UContextMenuItem @click="copy(folder.path)"> Copy path </UContextMenuItem>
-                <UContextMenuCheckboxItem
-                  :checked="!!folder.recursive"
-                  @update:checked="(checked) => setFolderScanDepth(folder.path, checked)"
-                >
-                  Scan subfolders
-                </UContextMenuCheckboxItem>
                 <UContextMenuItem @click="handleRemoveFolder(folder.path)">
                   Remove
                 </UContextMenuItem>
@@ -81,22 +73,13 @@ async function handleDrop(folderPaths: string[]) {
           </ToggleGroupRoot>
         </UCard>
       </TauriDragoverProvider>
-      <div class="flex items-center justify-between">
-        <div class="flex gap-2 items-center">
-          <UButton
-            variant="outline"
-            @click="handleAddFolder"
-          >
-            Add folder...
-          </UButton>
-          <div class="flex gap-2 items-center">
-            <UCheckbox
-              id="scanSubfolders"
-              v-model:model-value="scanSubfolders"
-            />
-            <ULabel for="scanSubfolders"> Scan subfolders </ULabel>
-          </div>
-        </div>
+      <div class="flex justify-between">
+        <UButton
+          variant="outline"
+          @click="handleAddFolder"
+        >
+          Add folder...
+        </UButton>
         <UButton
           variant="outline"
           :disabled="!selectedFolder"

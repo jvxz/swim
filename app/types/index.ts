@@ -26,6 +26,8 @@ export type TrackListInput =
       sortBy?: TrackListSortByFrame
       sortOrder: TrackListSortOrder
       type: TrackListEntryType
+      //    ↓ 'folder' only: include tracks nested in subfolders
+      deep?: boolean
     }
   | {
       //    ↓ library doesn't need a path
