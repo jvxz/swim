@@ -9,6 +9,9 @@ export default defineConfig({
     presetAnimations,
   ],
   theme: {
+    text: {
+      sm: { fontSize: '0.8125rem', lineHeight: '1.125rem' },
+    },
     colors: {
       accent: 'var(--accent)',
       'accent-foreground': 'var(--accent-foreground)',
