@@ -20,15 +20,15 @@ allowBuilds:
 
 # `vite` must stay aliased to the Vite+ core build that matches `vite-plus`.
 #
-# `vue` is forced to one copy: left alone, pnpm installs 3.5.30 and 3.5.40 side by
-# side, which produces two `pinia` peer variants — so @tauri-store/pinia's
+# `vue` is forced to one copy: left alone, pnpm can install multiple versions side
+# by side, which produces multiple `pinia` peer variants — so @tauri-store/pinia's
 # `declare module 'pinia'` augments an identity the app never sees, and `$tauri` /
 # `tauri: {}` stop type-checking. Two Vue copies in one bundle is a runtime hazard
-# too. 3.5.30 specifically: see the compiler-sfc note in CLAUDE.md.
+# too.
 overrides:
   vite: 'catalog:'
   vitest: 'catalog:'
-  vue: 3.5.30
+  vue: 3.6.0-rc.2
 peerDependencyRules:
   allowAny:
     - vite
