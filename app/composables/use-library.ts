@@ -1,6 +1,8 @@
+import { emit } from '@tauri-apps/api/event'
 import { sql } from 'kysely'
 
 const LIBRARY_FOLDERS_KEY = 'library-folders'
+const LIBRARY_FOLDERS_CHANGED_EVENT = 'library-folders-changed'
 
 export function useLibrary() {
   const { getFolderTracks, getTracksData, refreshTrackData } = useTrackData()
@@ -47,6 +49,7 @@ export function useLibrary() {
       refreshNuxtData(buildFolderInLibraryKey(folderPath))
       refreshTrackListForType('library')
       refreshLibraryFolders()
+      void emit(LIBRARY_FOLDERS_CHANGED_EVENT)
     },
     void 0,
     { immediate: false },
@@ -101,6 +104,7 @@ export function useLibrary() {
         clearNuxtData(buildFolderInLibraryKey(folderPath))
         refreshLibraryFolders()
         refreshTrackListForType('library')
+        void emit(LIBRARY_FOLDERS_CHANGED_EVENT)
       },
       void 0,
       { immediate: false },
@@ -222,3 +226,5 @@ function buildFolderInLibraryKey(folderPath: string) {
 export function refreshLibraryFolders() {
   refreshNuxtData(LIBRARY_FOLDERS_KEY)
 }
+
+export { LIBRARY_FOLDERS_CHANGED_EVENT }
