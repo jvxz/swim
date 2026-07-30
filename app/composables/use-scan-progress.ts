@@ -13,10 +13,11 @@ export interface ScanProgressChangedPayload {
   progress: ScanProgress | null
 }
 
-/** Keyed by scan id (the folder path) rather than a single shared slot, so one scan
- * finishing can't clobber a different scan that's still running. Shared across windows:
- * app/plugins/scan-progress.ts relays the emitted event into this state in every window,
- * since a scan started from Settings should update the main window's status bar too. */
+/** Keyed by a unique scan id (not the folder path - two scans of the same folder can run
+ * concurrently) rather than a single shared slot, so one scan finishing can't clobber a
+ * different scan that's still running. Shared across windows: app/plugins/scan-progress.ts
+ * relays the emitted event into this state in every window, since a scan started from
+ * Settings should update the main window's status bar too. */
 export function useScanProgress() {
   return useState<Record<string, ScanProgress>>('scan-progress', () => ({}))
 }

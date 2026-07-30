@@ -85,21 +85,20 @@ export function useLibrary() {
 
       const paths = await $invoke(commands.getFolderTrackPaths, folderPath, false)
       const folderTracks: FileEntry[] = []
+      // unique per call (not just folderPath) so scanning the same folder twice
+      // concurrently can't have one call's completion clear the other's progress
+      const scanId = crypto.randomUUID()
 
       try {
         if (paths.length > 0) {
-          await reportScanProgress(folderPath, {
-            current: 0,
-            label: folderPath,
-            total: paths.length,
-          })
+          await reportScanProgress(scanId, { current: 0, label: folderPath, total: paths.length })
 
           for (let i = 0; i < paths.length; i += SCAN_PROGRESS_BATCH_SIZE) {
             const batch = paths.slice(i, i + SCAN_PROGRESS_BATCH_SIZE)
             folderTracks.push(...(await getTracksData(batch)))
             // count paths attempted, not entries returned - getTracksData silently drops
             // paths it couldn't read, so counting only successes would never reach total
-            await reportScanProgress(folderPath, {
+            await reportScanProgress(scanId, {
               current: Math.min(i + SCAN_PROGRESS_BATCH_SIZE, paths.length),
               label: folderPath,
               total: paths.length,
@@ -107,7 +106,7 @@ export function useLibrary() {
           }
         }
       } finally {
-        await reportScanProgress(folderPath, null)
+        await reportScanProgress(scanId, null)
       }
 
       await addTracksToLibrary(folderTracks, {
