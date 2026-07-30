@@ -1,9 +1,14 @@
 import { emit } from '@tauri-apps/api/event'
 import { LazyStore } from '@tauri-apps/plugin-store'
+import type { Selectable } from 'kysely'
 import { sql } from 'kysely'
+
+import type { LibraryTracks } from '~/types/db'
 
 const LIBRARY_FOLDERS_KEY = 'library-folders'
 const LIBRARY_FOLDERS_CHANGED_EVENT = 'library-folders-changed'
+// keeps each insert/IN-clause well under SQLite's ~32,766 bind-variable limit
+const LIBRARY_BATCH_SIZE = 500
 
 const metadataBackfillStore = new LazyStore('library-metadata-backfill.json')
 
@@ -58,7 +63,7 @@ export function useLibrary() {
     )
 
   const { execute: addFolderToLibrary, isLoading: isAddingFolderToLibrary } = useAsyncState<void>(
-    async (folderPath: string) => {
+    async (folderPath: string, deep = false) => {
       const exists = await useTauriFsExists(folderPath)
       if (!exists)
         // TODO: show error toast
@@ -73,10 +78,11 @@ export function useLibrary() {
         .insertInto('library_folders')
         .values({
           path: folderPath,
+          recursive: deep ? 1 : 0,
         })
         .execute()
 
-      const folderTracks = await getFolderTracks(folderPath, true)
+      const folderTracks = await getFolderTracks(folderPath, deep)
 
       await addTracksToLibrary(folderTracks, {
         id: folderPath,
@@ -157,13 +163,13 @@ export function useLibrary() {
       { immediate: false },
     )
 
-  async function addTracksToLibrary(
+  async function addTrackBatch(
     tracks: FileEntry[],
     source: {
       type: 'folder' | 'playlist'
       id: string
     },
-  ) {
+  ): Promise<Selectable<LibraryTracks>[]> {
     await $db()
       .insertInto('library_tracks')
       .values(
@@ -204,6 +210,23 @@ export function useLibrary() {
       )
       .onConflict((conflict) => conflict.doNothing())
       .execute()
+
+    return existingLibraryTracks
+  }
+
+  async function addTracksToLibrary(
+    tracks: FileEntry[],
+    source: {
+      type: 'folder' | 'playlist'
+      id: string
+    },
+  ) {
+    const existingLibraryTracks: Selectable<LibraryTracks>[] = []
+
+    for (let i = 0; i < tracks.length; i += LIBRARY_BATCH_SIZE) {
+      const batch = tracks.slice(i, i + LIBRARY_BATCH_SIZE)
+      existingLibraryTracks.push(...(await addTrackBatch(batch, source)))
+    }
 
     // date_added lives on the library row, so the cached file entries are now stale
     await refreshTrackData(existingLibraryTracks.map((track) => track.path))

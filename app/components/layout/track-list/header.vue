@@ -124,12 +124,14 @@ const title = computed(() => {
         </UDropdownMenuTrigger>
         <UDropdownMenuContent align="end">
           <template v-if="type === 'folder'">
-            <UDropdownMenuItem
-              v-if="!isFolderInLibrary"
-              @click="addFolderToLibrary(0, path)"
-            >
-              Add to library
-            </UDropdownMenuItem>
+            <template v-if="!isFolderInLibrary">
+              <UDropdownMenuItem @click="addFolderToLibrary(0, path, false)">
+                Add to library
+              </UDropdownMenuItem>
+              <UDropdownMenuItem @click="addFolderToLibrary(0, path, true)">
+                Add to library (include subfolders)
+              </UDropdownMenuItem>
+            </template>
             <UDropdownMenuItem
               v-else
               @click="removeFolderFromLibrary(0, path)"
