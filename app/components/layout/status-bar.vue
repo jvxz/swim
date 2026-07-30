@@ -1,9 +1,13 @@
 <script lang="ts" setup>
-const scanProgress = useScanProgress()
+const scans = useScanProgress()
+
+// only one scan's progress is shown at a time - if more than one folder is scanning
+// concurrently, this just picks whichever started first rather than listing all of them
+const activeScan = computed(() => Object.values(scans.value)[0] ?? null)
 
 const percent = computed(() => {
-  if (!scanProgress.value || scanProgress.value.total === 0) return 0
-  return (scanProgress.value.current / scanProgress.value.total) * 100
+  if (!activeScan.value || activeScan.value.total === 0) return 0
+  return (activeScan.value.current / activeScan.value.total) * 100
 })
 </script>
 
@@ -13,12 +17,10 @@ const percent = computed(() => {
   >
     <span class="text-muted-foreground">swim</span>
     <div
-      v-if="scanProgress"
+      v-if="activeScan"
       class="flex gap-2 items-center"
     >
-      <span class="tabular-nums">
-        Scanning {{ scanProgress.current }}/{{ scanProgress.total }}
-      </span>
+      <span class="tabular-nums"> Scanning {{ activeScan.current }}/{{ activeScan.total }} </span>
       <div class="bg-muted h-1 w-24 overflow-hidden">
         <div
           class="bg-primary h-full"

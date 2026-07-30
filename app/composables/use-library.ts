@@ -88,20 +88,26 @@ export function useLibrary() {
 
       try {
         if (paths.length > 0) {
-          await reportScanProgress({ current: 0, label: folderPath, total: paths.length })
+          await reportScanProgress(folderPath, {
+            current: 0,
+            label: folderPath,
+            total: paths.length,
+          })
 
           for (let i = 0; i < paths.length; i += SCAN_PROGRESS_BATCH_SIZE) {
             const batch = paths.slice(i, i + SCAN_PROGRESS_BATCH_SIZE)
             folderTracks.push(...(await getTracksData(batch)))
-            await reportScanProgress({
-              current: folderTracks.length,
+            // count paths attempted, not entries returned - getTracksData silently drops
+            // paths it couldn't read, so counting only successes would never reach total
+            await reportScanProgress(folderPath, {
+              current: Math.min(i + SCAN_PROGRESS_BATCH_SIZE, paths.length),
               label: folderPath,
               total: paths.length,
             })
           }
         }
       } finally {
-        await reportScanProgress(null)
+        await reportScanProgress(folderPath, null)
       }
 
       await addTracksToLibrary(folderTracks, {
