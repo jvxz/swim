@@ -73,9 +73,11 @@ pub async fn download_tracks(app_handle: AppHandle<tauri::Wry>, paths: Vec<Strin
   let mut pending: Vec<(String, u32)> = Vec::new();
 
   for path in paths {
+    // Only `Local` is skipped, not every terminal state: a `DownloadFailed`
+    // path is exactly what the retry action sends, and it needs a fresh
+    // request rather than an echo of the failure it's trying to clear.
     let (status, _) = probe(Path::new(&path));
-    if status.is_terminal() {
-      // Already materialized (or unreachable) — nothing to ask the provider for.
+    if status == DownloadStatus::Local {
       emit_progress(&app_handle, &path, status, None);
       continue;
     }

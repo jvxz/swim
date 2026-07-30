@@ -5,7 +5,7 @@ export const usePlayback = createSharedComposable(() => {
   const { emitMessage } = useConsole()
   const { incrementPlayCount, updatePlayCount } = usePlayCount()
   const { markTrackPlayed } = useLibrary()
-  const { downloadTracks } = useFileProvider()
+  const { downloadTracks, liveDownloadStatus } = useFileProvider()
 
   // internal
   const _playbackStatus = ref<StreamStatus | null>(
@@ -62,6 +62,9 @@ export const usePlayback = createSharedComposable(() => {
   // the track we've committed to playing once its download lands. The player
   // shows it as current before any audio exists, so the transport controls act
   // on the track the user just asked for rather than the one still loaded.
+  // identifies the newest `playTrack` call, so one that resumes after a long
+  // download can tell whether it's still the request the user is waiting on
+  let _playRequestId = 0
   const _pendingTrack = shallowRef<TrackListEntry | null>(null)
   // set when the user pauses mid-download: the track stays on screen and the
   // download keeps running, it just won't start itself when the file lands
@@ -233,6 +236,7 @@ export const usePlayback = createSharedComposable(() => {
   async function playTrack(entry: TrackListEntry, list?: TrackListEntry[]) {
     // this call supersedes any download we were previously waiting on, so that
     // in-flight `playTrack` bails instead of hijacking playback when it lands
+    const requestId = ++_playRequestId
     _pendingTrack.value = null
     _pendingPaused.value = false
 
@@ -253,8 +257,10 @@ export const usePlayback = createSharedComposable(() => {
     }
 
     // a File Provider placeholder has no audio to stream yet — materialize it
-    // first (same command the context-menu action uses, just awaited here)
-    if (entry.download_status !== 'Local') {
+    // first (same command the context-menu action uses, just awaited here).
+    // Read through `liveDownloadStatus`: entries restored from the persisted
+    // store predate the field, and a missing one means an ordinary local file.
+    if (liveDownloadStatus(entry) !== 'Local') {
       // stop whatever's playing before the wait starts — the player is about to
       // show the track being downloaded, and still hearing the previous one
       // would contradict that
@@ -271,8 +277,10 @@ export const usePlayback = createSharedComposable(() => {
 
       await downloadTracks([entry.path])
 
-      // superseded while downloading — another track was picked
-      if (_pendingTrack.value?.path !== entry.path) return
+      // superseded while downloading — compared by request rather than by path,
+      // so re-activating the *same* track mid-download can't let both calls
+      // through and double up the play, now-playing and play-count side effects
+      if (requestId !== _playRequestId) return
       // paused while downloading — stay on screen, wait for play to be pressed
       if (_pendingPaused.value) return
 
@@ -362,6 +370,9 @@ export const usePlayback = createSharedComposable(() => {
   }
 
   async function resetPlayback() {
+    // also invalidates any in-flight `playTrack`, so a download finishing after
+    // a reset doesn't start playing into what should be a stopped player
+    _playRequestId++
     _pendingTrack.value = null
     _pendingPaused.value = false
 
