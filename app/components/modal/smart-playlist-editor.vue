@@ -8,6 +8,10 @@ const name = shallowRef('New smart playlist')
 const match = shallowRef<'all' | 'any'>('all')
 const rules = ref<SmartPlaylistRule[]>([])
 
+// disabled via `inert` below, so the load below can't land on top of an edit the
+// user made while it was still in flight
+const isLoading = shallowRef(false)
+
 // guards against a slow load for one playlist landing after the dialog has
 // already been reopened for another (or closed and reopened for "new")
 let loadToken = 0
@@ -22,8 +26,11 @@ watch(isOpen, async (open) => {
     name.value = 'New smart playlist'
     match.value = 'all'
     rules.value = []
+    isLoading.value = false
     return
   }
+
+  isLoading.value = true
 
   const playlist = await $db()
     .selectFrom('playlists')
@@ -31,7 +38,10 @@ watch(isOpen, async (open) => {
     .select(['name', 'rules'])
     .executeTakeFirst()
 
-  if (!playlist || token !== loadToken) return
+  if (token !== loadToken) return
+
+  isLoading.value = false
+  if (!playlist) return
 
   const group = parseSmartPlaylistRules(playlist.rules)
   name.value = playlist.name
@@ -70,7 +80,11 @@ async function save() {
         </UDialogTitle>
       </UDialogHeader>
 
-      <div class="flex flex-col gap-4">
+      <div
+        class="flex flex-col gap-4"
+        :inert="isLoading"
+        :class="{ 'opacity-50': isLoading }"
+      >
         <FormPrimitive label="Name">
           <UInput v-model="name" />
         </FormPrimitive>
@@ -127,7 +141,7 @@ async function save() {
           <UButton variant="soft"> Cancel </UButton>
         </UDialogClose>
         <UButton
-          :disabled="!name.trim()"
+          :disabled="!name.trim() || isLoading"
           @click="save"
         >
           Save

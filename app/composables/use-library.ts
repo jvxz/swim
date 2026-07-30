@@ -29,7 +29,10 @@ export async function backfillTrackMetadata() {
     ),
   )
 
-  await metadataBackfillStore.set('done', true)
+  // getTracksData silently drops paths it couldn't read (e.g. an unavailable cloud
+  // file) - only mark done once every row was actually covered, so the rest get
+  // retried on the next pass instead of staying null forever.
+  if (entries.length === tracks.length) await metadataBackfillStore.set('done', true)
 }
 
 export function useLibrary() {
