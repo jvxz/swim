@@ -187,6 +187,28 @@ pub async fn run() {
     ",
       version: 10,
     },
+    Migration {
+      kind: MigrationKind::Up,
+      description: "add genre, year, track_no, disc_no, composer, album_artist to library_tracks",
+      sql: "
+          ALTER TABLE library_tracks ADD COLUMN genre TEXT;
+          ALTER TABLE library_tracks ADD COLUMN year INTEGER;
+          ALTER TABLE library_tracks ADD COLUMN track_no INTEGER;
+          ALTER TABLE library_tracks ADD COLUMN disc_no INTEGER;
+          ALTER TABLE library_tracks ADD COLUMN composer TEXT;
+          ALTER TABLE library_tracks ADD COLUMN album_artist TEXT;
+    ",
+      version: 11,
+    },
+    Migration {
+      kind: MigrationKind::Up,
+      description: "add is_smart and rules to playlists",
+      sql: "
+          ALTER TABLE playlists ADD COLUMN is_smart INTEGER NOT NULL DEFAULT 0;
+          ALTER TABLE playlists ADD COLUMN rules TEXT;
+    ",
+      version: 12,
+    },
   ];
 
   let rpc_builder = tauri_specta::Builder::<tauri::Wry>::new().commands(collect_commands![

@@ -1,13 +1,50 @@
 import { emit } from '@tauri-apps/api/event'
+import { LazyStore } from '@tauri-apps/plugin-store'
 import { sql } from 'kysely'
 
 const LIBRARY_FOLDERS_KEY = 'library-folders'
 const LIBRARY_FOLDERS_CHANGED_EVENT = 'library-folders-changed'
 
+const metadataBackfillStore = new LazyStore('library-metadata-backfill.json')
+
+/** One-time pass populating genre/year/track_no/disc_no/composer/album_artist on rows
+ * inserted before those columns existed. New rows get them at insert time. Callable from
+ * anywhere that reads library_tracks (library view, smart playlists) so none of them can
+ * see stale/unbackfilled rows depending on which one happens to load first. */
+export async function backfillTrackMetadata() {
+  if (await metadataBackfillStore.get('done')) return
+
+  const { getTracksData } = useTrackData()
+  const tracks = await $db().selectFrom('library_tracks').select(['path']).execute()
+
+  const entries = await getTracksData(tracks.map((track) => track.path))
+
+  await Promise.all(
+    entries.map((entry) =>
+      $db()
+        .updateTable('library_tracks')
+        .set(getTrackMetadataFields(entry.tags))
+        .where('path', '=', entry.path)
+        .execute(),
+    ),
+  )
+
+  // getTracksData silently drops paths it couldn't read, and a cloud-only file that
+  // isn't downloaded yet comes back with empty tags rather than being dropped - only
+  // mark done once every row was actually read locally, so the rest get retried on
+  // the next pass instead of staying null forever.
+  const fullyCovered =
+    entries.length === tracks.length && entries.every((entry) => entry.download_status === 'Local')
+
+  if (fullyCovered) await metadataBackfillStore.set('done', true)
+}
+
 export function useLibrary() {
   const { getFolderTracks, getTracksData, refreshTrackData } = useTrackData()
 
   async function getLibraryTracks() {
+    await backfillTrackMetadata()
+
     const tracks = await $db().selectFrom('library_tracks').selectAll().execute()
 
     return await getTracksData(tracks.map((track) => track.path))
@@ -131,6 +168,7 @@ export function useLibrary() {
       .insertInto('library_tracks')
       .values(
         tracks.map((track) => ({
+          ...getTrackMetadataFields(track.tags),
           album: track.tags.TALB ?? null,
           artist: track.tags.TPE1 ?? null,
           date_added: sql<string>`CURRENT_TIMESTAMP`,

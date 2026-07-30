@@ -84,8 +84,23 @@ export function useTrackList() {
       }
 
       case 'playlist': {
-        const { getPlaylistTracks } = useUserPlaylists()
-        tracks = await getPlaylistTracks(Number(input.path))
+        const playlistId = Number(input.path)
+        const playlist = await $db()
+          .selectFrom('playlists')
+          .where('id', '=', playlistId)
+          .select(['is_smart', 'rules'])
+          .executeTakeFirst()
+
+        if (playlist?.is_smart) {
+          const { getSmartPlaylistTracks } = useSmartPlaylists()
+          tracks = (await getSmartPlaylistTracks(playlist)).map((entry) => ({
+            ...entry,
+            is_playlist_track: false as const,
+          }))
+        } else {
+          const { getPlaylistTracks } = useUserPlaylists()
+          tracks = await getPlaylistTracks(playlistId)
+        }
         break
       }
 
