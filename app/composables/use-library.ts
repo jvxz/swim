@@ -129,22 +129,31 @@ export function useLibrary() {
   async function pruneUnreferencedTracks(candidateTrackIds: number[]) {
     if (candidateTrackIds.length === 0) return
 
-    const stillReferenced = await $db()
-      .selectFrom('library_tracks_source')
-      .where('track_id', 'in', candidateTrackIds)
-      .select('track_id')
-      .execute()
+    const referencedIds = new Set<number>()
+    for (const batch of chunk(candidateTrackIds, LIBRARY_BATCH_SIZE)) {
+      const stillReferenced = await $db()
+        .selectFrom('library_tracks_source')
+        .where('track_id', 'in', batch)
+        .select('track_id')
+        .execute()
 
-    const referencedIds = new Set(stillReferenced.map((source) => source.track_id))
+      stillReferenced.forEach((source) => referencedIds.add(source.track_id))
+    }
+
     const orphanIds = candidateTrackIds.filter((id) => !referencedIds.has(id))
 
     if (orphanIds.length === 0) return
 
-    const deletedTracks = await $db()
-      .deleteFrom('library_tracks')
-      .where('id', 'in', orphanIds)
-      .returning('path')
-      .execute()
+    const deletedTracks: { path: string }[] = []
+    for (const batch of chunk(orphanIds, LIBRARY_BATCH_SIZE)) {
+      deletedTracks.push(
+        ...(await $db()
+          .deleteFrom('library_tracks')
+          .where('id', 'in', batch)
+          .returning('path')
+          .execute()),
+      )
+    }
 
     // the tracks no longer have a date_added, so the cached file entries are stale
     await refreshTrackData(deletedTracks.map((track) => track.path))
@@ -179,19 +188,21 @@ export function useLibrary() {
       .map((track) => track.id)
 
     if (staleTrackIds.length > 0) {
-      await $db()
-        .deleteFrom('library_tracks_source')
-        .where('source_type', '=', 'folder')
-        .where('source_id', '=', folderPath)
-        .where('track_id', 'in', staleTrackIds)
-        .execute()
+      for (const batch of chunk(staleTrackIds, LIBRARY_BATCH_SIZE)) {
+        await $db()
+          .deleteFrom('library_tracks_source')
+          .where('source_type', '=', 'folder')
+          .where('source_id', '=', folderPath)
+          .where('track_id', 'in', batch)
+          .execute()
+      }
 
       await pruneUnreferencedTracks(staleTrackIds)
     }
 
     await addTracksToLibrary(currentTracks, { id: folderPath, type: 'folder' })
 
-    refreshLibraryFolders()
+    void emit(LIBRARY_FOLDERS_CHANGED_EVENT)
   }
 
   const useFolderInLibrary = (folderPath: string) =>
@@ -266,8 +277,7 @@ export function useLibrary() {
   ) {
     const existingLibraryTracks: Selectable<LibraryTracks>[] = []
 
-    for (let i = 0; i < tracks.length; i += LIBRARY_BATCH_SIZE) {
-      const batch = tracks.slice(i, i + LIBRARY_BATCH_SIZE)
+    for (const batch of chunk(tracks, LIBRARY_BATCH_SIZE)) {
       existingLibraryTracks.push(...(await addTrackBatch(batch, source)))
     }
 
@@ -324,6 +334,12 @@ export function useLibrary() {
 
 function buildFolderInLibraryKey(folderPath: string) {
   return `${folderPath}-in-library`
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = []
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size))
+  return chunks
 }
 
 export function refreshLibraryFolders() {
