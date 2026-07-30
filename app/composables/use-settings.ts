@@ -35,8 +35,9 @@ export interface Settings {
 
   layout: {
     allowResizing: boolean
-    panel: Record<LayoutPanelKey, LayoutPanelSetting>
     element: LayoutElementSettings
+    panel: Record<LayoutPanelKey, LayoutPanelSetting>
+    showStatusBar: boolean
   }
 }
 
@@ -118,6 +119,7 @@ export const DEFAULT_SETTINGS: EnforcedSettingsKeys<Settings> = {
         size: 12.5,
       },
     },
+    showStatusBar: true,
   },
 }
 
