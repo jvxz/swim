@@ -25,6 +25,16 @@ onMounted(() => {
     type: 'playlist',
   }
 })
+
+const { addToPlaylist } = useUserPlaylists()
+const { getTracksData } = useTrackData()
+
+async function handleDrop(itemPaths: string[]) {
+  const tracks = await getTracksData(itemPaths)
+  const validTracks = tracks.filter((track) => track.valid)
+
+  if (validTracks.length > 0) await addToPlaylist(id, validTracks)
+}
 </script>
 
 <template>
@@ -32,10 +42,15 @@ onMounted(() => {
     v-if="id"
     class="flex-1"
   >
-    <LayoutTrackList
-      v-bind="trackListInput"
-      type="playlist"
-      :path="id.toString()"
-    />
+    <TauriDragoverProvider
+      :acceptable-keys="['track-list-entry', 'UNKNOWN']"
+      @drop="handleDrop"
+    >
+      <LayoutTrackList
+        v-bind="trackListInput"
+        type="playlist"
+        :path="id.toString()"
+      />
+    </TauriDragoverProvider>
   </div>
 </template>
