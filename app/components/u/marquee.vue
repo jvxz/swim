@@ -327,6 +327,10 @@ onMounted(() => {
   animation-play-state: var(--play);
   animation-delay: var(--delay);
   animation-direction: var(--direction);
+  /* unpromoted transform animations tear in WKWebView, bleeding into
+     adjacent siblings sharing the same stacking context (e.g. the
+     transport controls next to the title) */
+  will-change: transform;
 }
 
 @keyframes scroll {
