@@ -1,5 +1,5 @@
 export const usePlayback = createSharedComposable(() => {
-  const { prefs, store } = useTauri()
+  const { listen, prefs, store } = useTauri()
   const { scrobbleTrack, updateNowPlaying } = useLastFm()
   const { getTrackData, refreshTrackData, trackCache } = useTrackData()
   const { emitMessage } = useConsole()
@@ -13,9 +13,42 @@ export const usePlayback = createSharedComposable(() => {
   // public
   const playbackStatus = readonly(_playbackStatus)
 
+  // the cached value above can be stale (e.g. it still names an output
+  // device the backend fell back away from during its own startup, before
+  // this listener could exist) — GetStatus round-trips through the same
+  // channel the audio thread's startup logic runs on before servicing any
+  // request, so the response is guaranteed authoritative
+  $invoke(commands.controlPlayback, 'GetStatus').then((status) => {
+    _playbackStatus.value = status
+  })
+
   const _currentTrackContext = shallowRef<CurrentPlayingTrack | null>(
     prefs.get('current-track') as CurrentPlayingTrack | null,
   )
+
+  // derived from playbackStatus (backend-authoritative) rather than tracked
+  // separately, so a failed/fallback device switch never shows a selection
+  // that was never actually applied
+  const outputDevice = computed(() => _playbackStatus.value?.output_device ?? null)
+  const outputDevices = ref<AudioDeviceInfo[]>([])
+
+  async function refreshOutputDevices() {
+    outputDevices.value = await $invoke(commands.listOutputDevices)
+  }
+
+  async function setOutputDevice(deviceName: string | null) {
+    _playbackStatus.value = await $invoke(commands.controlPlayback, {
+      SetOutputDevice: deviceName,
+    })
+  }
+
+  listen('output-device-fallback', () => {
+    if (_playbackStatus.value) _playbackStatus.value.output_device = null
+    emitError({
+      data: 'Selected output device disconnected, reverted to system default',
+      type: 'Audio',
+    })
+  })
   const currentTrack = computed<CurrentPlayingTrack | null>(() => {
     if (!_currentTrackContext.value) return null
 
@@ -309,12 +342,16 @@ export const usePlayback = createSharedComposable(() => {
     hasNextTrack,
     hasPreviousTrack,
     isShuffled,
+    outputDevice,
+    outputDevices,
     playbackStatus,
     playPauseCurrentTrack,
     playTrack,
+    refreshOutputDevices,
     resetPlayback,
     seekCurrentTrack,
     setLoop,
+    setOutputDevice,
     setVolume,
     skipTrack,
     toggleMute,

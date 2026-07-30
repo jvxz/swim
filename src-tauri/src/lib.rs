@@ -191,6 +191,7 @@ pub async fn run() {
     read::get_tracks_data,
     read::get_folder_track_paths,
     playback::control_playback,
+    audio::list_output_devices,
     waveform::get_waveform,
     lastfm::open_lastfm_auth,
     lastfm::complete_lastfm_auth,
@@ -288,9 +289,12 @@ pub async fn run() {
       app.manage(AudioHandle { tx });
 
       let initial_state = get_initial_state(app.app_handle())?;
+      let initial_device = initial_state.as_ref().and_then(|s| s.output_device.clone());
       let audio_thread_app_handle = app.app_handle().clone();
       let _ = std::thread::spawn(move || {
-        if let Err(e) = audio::spawn_audio_thread(rx, initial_state, audio_thread_app_handle) {
+        if let Err(e) =
+          audio::spawn_audio_thread(rx, initial_state, initial_device, audio_thread_app_handle)
+        {
           // log::error!("Failed to spawn audio thread: {e}");
           println!("Failed to spawn audio thread: {e}");
         }
