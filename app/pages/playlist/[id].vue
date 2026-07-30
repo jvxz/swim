@@ -14,14 +14,14 @@ definePageMeta({
 })
 
 const route = useRoute()
-const id = 'id' in route.params ? Number(route.params.id) : 0
+const id = computed(() => ('id' in route.params ? Number(route.params.id) : 0))
 
 const trackListInput = useTrackListInput()
 
 onMounted(() => {
   trackListInput.value = {
     ...trackListInput.value,
-    path: id.toString(),
+    path: id.value.toString(),
     type: 'playlist',
   }
 })
@@ -33,7 +33,7 @@ async function handleDrop(itemPaths: string[]) {
   const tracks = await getTracksData(itemPaths)
   const validTracks = tracks.filter((track) => track.valid)
 
-  if (validTracks.length > 0) await addToPlaylist(id, validTracks)
+  if (validTracks.length > 0) await addToPlaylist(id.value, validTracks)
 }
 </script>
 
