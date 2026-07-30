@@ -48,7 +48,6 @@ export function useLibrary() {
 
       refreshNuxtData(buildFolderInLibraryKey(folderPath))
       refreshTrackListForType('library')
-      refreshLibraryFolders()
       void emit(LIBRARY_FOLDERS_CHANGED_EVENT)
     },
     void 0,
@@ -102,7 +101,6 @@ export function useLibrary() {
         await $db().deleteFrom('library_folders').where('path', '=', folderPath).execute()
 
         clearNuxtData(buildFolderInLibraryKey(folderPath))
-        refreshLibraryFolders()
         refreshTrackListForType('library')
         void emit(LIBRARY_FOLDERS_CHANGED_EVENT)
       },
