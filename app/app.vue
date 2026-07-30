@@ -22,6 +22,7 @@ onUnmounted(() => unlisten?.())
     <NuxtPage />
   </NuxtLayout>
   <ModalItemSearch />
+  <ModalSmartPlaylistEditor />
   <DevOnly>
     <DebugDetails />
   </DevOnly>

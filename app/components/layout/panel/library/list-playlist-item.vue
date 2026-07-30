@@ -14,9 +14,12 @@ const emits = defineEmits<{
 }>()
 
 const { addToPlaylist } = useUserPlaylists()
+const { openEditDialog } = useSmartPlaylistEditor()
 const { getTracksData } = useTrackData()
 
 async function handleDrop(itemPaths: string[]) {
+  if (props.playlist.is_smart) return
+
   const tracks = await getTracksData(itemPaths)
   const validTracks = tracks.filter((track) => track.valid)
 
@@ -65,7 +68,12 @@ const urlPlaylistId = computed(() => ('id' in route.params ? Number(route.params
               })
             "
           >
-            <EditableArea>
+            <EditableArea class="flex gap-1.5 items-center">
+              <Icon
+                v-if="playlist.is_smart"
+                name="tabler:settings-automation"
+                class="opacity-70 shrink-0 size-3.5!"
+              />
               <EditablePreview as-child>
                 <span>{{ playlist.name }}</span>
               </EditablePreview>
@@ -80,6 +88,12 @@ const urlPlaylistId = computed(() => ('id' in route.params ? Number(route.params
       </UContextMenuTrigger>
       <UContextMenuContent class="w-52">
         <UContextMenuItem @click="edit"> Rename </UContextMenuItem>
+        <UContextMenuItem
+          v-if="playlist.is_smart"
+          @click="openEditDialog(playlist.id)"
+        >
+          Edit rules
+        </UContextMenuItem>
         <UContextMenuItem @click="emits('deletePlaylist')"> Delete </UContextMenuItem>
       </UContextMenuContent>
     </UContextMenu>

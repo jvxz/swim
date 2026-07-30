@@ -24,6 +24,7 @@ type TreeItem = Prettify<
 >
 
 const { createPlaylist, deletePlaylist, renamePlaylist } = useUserPlaylists()
+const { openCreateDialog } = useSmartPlaylistEditor()
 const { getLibraryFolders } = useLibrary()
 const { data: folders } = getLibraryFolders()
 
@@ -177,6 +178,7 @@ const treeItems = computed<TreeItem[]>(() => [
         <UContextMenuItem @click="createPlaylist({ name: 'New playlist' })">
           New playlist
         </UContextMenuItem>
+        <UContextMenuItem @click="openCreateDialog"> New smart playlist </UContextMenuItem>
       </UContextMenuContent>
     </UContextMenu>
   </div>

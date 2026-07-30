@@ -51,7 +51,9 @@ export interface LibraryTracksSource {
 export interface Playlists {
   created_at: Generated<string>;
   id: Generated<number>;
+  is_smart: Generated<number>;
   name: string;
+  rules: string | null;
 }
 
 export interface PlaylistTracks {

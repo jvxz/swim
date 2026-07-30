@@ -65,6 +65,8 @@ diesel::table! {
         id -> Nullable<Integer>,
         name -> Text,
         created_at -> Nullable<Timestamp>,
+        is_smart -> Bool,
+        rules -> Nullable<Text>,
     }
 }
 

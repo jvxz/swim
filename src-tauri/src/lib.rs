@@ -200,6 +200,15 @@ pub async fn run() {
     ",
       version: 11,
     },
+    Migration {
+      kind: MigrationKind::Up,
+      description: "add is_smart and rules to playlists",
+      sql: "
+          ALTER TABLE playlists ADD COLUMN is_smart INTEGER NOT NULL DEFAULT 0;
+          ALTER TABLE playlists ADD COLUMN rules TEXT;
+    ",
+      version: 12,
+    },
   ];
 
   let rpc_builder = tauri_specta::Builder::<tauri::Wry>::new().commands(collect_commands![
