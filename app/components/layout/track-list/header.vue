@@ -130,8 +130,8 @@ function setIncludeSubfolders(checked: boolean) {
         <UDropdownMenuContent align="end">
           <template v-if="type === 'folder'">
             <UDropdownMenuCheckboxItem
-              :checked="!!trackListInput.deep"
-              @update:checked="setIncludeSubfolders"
+              :model-value="!!trackListInput.deep"
+              @update:model-value="setIncludeSubfolders"
             >
               Include subfolders
             </UDropdownMenuCheckboxItem>
