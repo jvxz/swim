@@ -1,6 +1,8 @@
 use crate::diesel_schema::track_play_count::dsl::*;
 use crate::error::Error;
 use crate::error::Result;
+use crate::file_provider::get_download_status;
+use crate::file_provider::DownloadStatus;
 use crate::id3::TagTypeArg;
 use crate::utils::get_track_identity_key;
 use crate::DbPool;
@@ -47,6 +49,7 @@ pub struct FileEntry {
   pub play_count: i32,
   pub date_added: Option<String>,
   pub last_played: Option<String>,
+  pub download_status: DownloadStatus,
 }
 
 pub static FOLDER_CACHE: LazyLock<DashMap<String, Arc<Vec<String>>>> = LazyLock::new(DashMap::new);
@@ -205,6 +208,43 @@ fn file_entry_from_path(app_handle: AppHandle<tauri::Wry>, path: PathBuf) -> Res
       play_count: 0,
       date_added: None,
       last_played: None,
+      download_status: DownloadStatus::Local,
+    });
+  }
+
+  // Reading tags/duration off an unmaterialized File Provider placeholder is
+  // itself what forces a blocking download, so stop before touching the file
+  // and let the frontend trigger the download explicitly.
+  let download_status = get_download_status(&path);
+  if download_status != DownloadStatus::Local {
+    let (date_added_res, last_played_res) =
+      get_library_dates(app_handle, path.to_string_lossy().as_ref())?;
+
+    return Ok(FileEntry {
+      filename: path
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or("Unknown filename".to_string()),
+      tags: SerializableTagMap::new(),
+      full_uri: String::new(),
+      thumbnail_uri: String::new(),
+      path: path.to_string_lossy().to_string(),
+      name: path
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or("Unknown title".to_string()),
+      is_playlist_track: false,
+      valid: true,
+      primary_tag: None,
+      extension: path
+        .extension()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or("Unknown extension".to_string()),
+      duration: -1.0,
+      play_count: -1,
+      date_added: date_added_res,
+      last_played: last_played_res,
+      download_status,
     });
   }
 
@@ -244,6 +284,7 @@ fn file_entry_from_path(app_handle: AppHandle<tauri::Wry>, path: PathBuf) -> Res
     play_count: play_count_res.unwrap_or(-1),
     date_added: date_added_res,
     last_played: last_played_res,
+    download_status,
   });
 }
 

@@ -5,6 +5,7 @@ export const usePlayback = createSharedComposable(() => {
   const { emitMessage } = useConsole()
   const { incrementPlayCount, updatePlayCount } = usePlayCount()
   const { markTrackPlayed } = useLibrary()
+  const { downloadTracks } = useFileProvider()
 
   // internal
   const _playbackStatus = ref<StreamStatus | null>(
@@ -57,6 +58,18 @@ export const usePlayback = createSharedComposable(() => {
 
     return { ...fileEntry, ..._currentTrackContext.value, tags: { ...fileEntry.tags } }
   })
+
+  // the track we've committed to playing once its download lands. The player
+  // shows it as current before any audio exists, so the transport controls act
+  // on the track the user just asked for rather than the one still loaded.
+  const _pendingTrack = shallowRef<TrackListEntry | null>(null)
+  // set when the user pauses mid-download: the track stays on screen and the
+  // download keeps running, it just won't start itself when the file lands
+  const _pendingPaused = shallowRef(false)
+  // no audio exists for the displayed track either way, so it has no timeline;
+  // `isAwaitingDownload` narrows that to "and it will start on its own"
+  const hasPendingDownload = computed(() => _pendingTrack.value !== null)
+  const isAwaitingDownload = computed(() => _pendingTrack.value !== null && !_pendingPaused.value)
 
   // the track list the current track was played from — the source for next/previous
   const _playbackList = shallowRef<TrackListEntry[]>([])
@@ -180,6 +193,9 @@ export const usePlayback = createSharedComposable(() => {
       return {
         ...res,
         ...entry,
+        // `entry` is the caller's snapshot from before the download started, so
+        // it still says the file is remote — the fresh fetch knows better
+        download_status: res.download_status,
       }
     },
     200,
@@ -187,6 +203,20 @@ export const usePlayback = createSharedComposable(() => {
 
   async function playPauseCurrentTrack(action?: 'Resume' | 'Pause') {
     if (!_currentTrackContext.value || !_playbackStatus.value) return
+
+    // there's no stream to pause or resume while a download is outstanding
+    if (_pendingTrack.value) {
+      if (!_pendingPaused.value) {
+        if (action !== 'Resume') _pendingPaused.value = true
+        return
+      }
+
+      // picking it back up: the download has been running the whole time, so
+      // this either resumes the wait or plays immediately if it already landed
+      if (action !== 'Pause') return void playTrack(_pendingTrack.value)
+
+      return
+    }
 
     // scrobble current track if not already scrobbled & applicable
     if (_currentTrackContext.value && _playbackStatus.value && canScrobble()) {
@@ -201,6 +231,11 @@ export const usePlayback = createSharedComposable(() => {
   }
 
   async function playTrack(entry: TrackListEntry, list?: TrackListEntry[]) {
+    // this call supersedes any download we were previously waiting on, so that
+    // in-flight `playTrack` bails instead of hijacking playback when it lands
+    _pendingTrack.value = null
+    _pendingPaused.value = false
+
     if (list) {
       _unshuffledList = _isShuffled.value ? list : []
       _playbackList.value = _isShuffled.value
@@ -215,6 +250,40 @@ export const usePlayback = createSharedComposable(() => {
     if (_currentTrackContext.value && _playbackStatus.value && canScrobble()) {
       scrobbleTrack(_currentTrackContext.value, _playbackStatus.value.duration)
       await nextTick()
+    }
+
+    // a File Provider placeholder has no audio to stream yet — materialize it
+    // first (same command the context-menu action uses, just awaited here)
+    if (entry.download_status !== 'Local') {
+      // stop whatever's playing before the wait starts — the player is about to
+      // show the track being downloaded, and still hearing the previous one
+      // would contradict that
+      _playbackStatus.value = await $invoke(commands.controlPlayback, 'Reset')
+
+      // adopt it as the current track up front: the player then shows what's
+      // coming, and skip/shuffle operate on it rather than the previous track
+      _currentTrackContext.value = {
+        ...entry,
+        playback_source: getInputTypeFromEntry(entry),
+        playback_source_id: entry.path,
+      }
+      _pendingTrack.value = entry
+
+      await downloadTracks([entry.path])
+
+      // superseded while downloading — another track was picked
+      if (_pendingTrack.value?.path !== entry.path) return
+      // paused while downloading — stay on screen, wait for play to be pressed
+      if (_pendingPaused.value) return
+
+      _pendingTrack.value = null
+
+      if (trackCache.get(entry.path)?.download_status !== 'Local') {
+        return emitError({
+          data: `${entry.name} could not be downloaded`,
+          type: 'FileSystem',
+        })
+      }
     }
 
     try {
@@ -279,7 +348,9 @@ export const usePlayback = createSharedComposable(() => {
   async function skipTrack(offset: 1 | -1) {
     if (_currentIndex.value === -1) return
 
-    if (offset === -1 && (_playbackStatus.value?.position ?? 0) > 3) {
+    // while awaiting a download the reported position belongs to the previous
+    // track, so "restart this one" would be meaningless — always step back
+    if (!_pendingTrack.value && offset === -1 && (_playbackStatus.value?.position ?? 0) > 3) {
       await seekCurrentTrack(0)
       return
     }
@@ -291,6 +362,9 @@ export const usePlayback = createSharedComposable(() => {
   }
 
   async function resetPlayback() {
+    _pendingTrack.value = null
+    _pendingPaused.value = false
+
     const status = await $invoke(commands.controlPlayback, 'Reset')
     _playbackStatus.value = status
     _currentTrackContext.value = null
@@ -340,7 +414,9 @@ export const usePlayback = createSharedComposable(() => {
   return {
     currentTrack,
     hasNextTrack,
+    hasPendingDownload,
     hasPreviousTrack,
+    isAwaitingDownload,
     isShuffled,
     outputDevice,
     outputDevices,

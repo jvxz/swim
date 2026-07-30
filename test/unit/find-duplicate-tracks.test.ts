@@ -6,6 +6,7 @@ import { durationKey, groupDuplicates, metadataKey } from '../../app/utils/find-
 function track(partial: Partial<FileEntry> & { path: string }): FileEntry {
   return {
     date_added: null,
+    download_status: 'Local',
     duration: 0,
     extension: 'mp3',
     filename: partial.path,

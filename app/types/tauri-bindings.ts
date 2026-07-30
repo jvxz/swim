@@ -148,6 +148,19 @@ async writeId3Frames(filePath: string, targetTag: TagTypeArg, args: FrameArgs[])
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Materialize File Provider placeholders, emitting progress per path until
+ * every one reaches a terminal state. Callers wanting fire-and-forget simply
+ * don't await the invoke promise.
+ */
+async downloadTracks(paths: string[]) : Promise<Result<null, Error>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("download_tracks", { paths }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -162,15 +175,36 @@ async writeId3Frames(filePath: string, targetTag: TagTypeArg, args: FrameArgs[])
 /** user-defined types **/
 
 export type AudioDeviceInfo = { name: string; is_default: boolean }
+export type DownloadStatus = 
+/**
+ * Fully present on disk, or on a platform/volume without a File Provider.
+ */
+"Local" | "NotDownloaded" | "Downloading" | "DownloadFailed"
 export type Error = { type: "Audio"; data: string } | { type: "Backend"; data: string } | { type: "Id3"; data: string } | { type: "FileSystem"; data: string } | { type: "LastFm"; data: string } | { type: "Waveform"; data: string } | { type: "Sql"; data: string } | { type: "Store"; data: string } | { type: "Stronghold"; data: string } | { type: "Other"; data: string }
-export type FileEntry = { path: string; name: string; filename: string; tags: Partial<{ [key in string]: string }>; thumbnail_uri: string; full_uri: string; is_playlist_track: boolean; valid: boolean; primary_tag: TagTypeArg | null; extension: string; duration: number; play_count: number; date_added: string | null; last_played: string | null }
+export type FileEntry = { path: string; name: string; filename: string; tags: Partial<{ [key in string]: string }>; thumbnail_uri: string; full_uri: string; is_playlist_track: boolean; valid: boolean; primary_tag: TagTypeArg | null; extension: string; duration: number; play_count: number; date_added: string | null; last_played: string | null; download_status: DownloadStatus }
 export type FrameArgs = { frame: string; value: string }
 export type PlayCountResponse = { track: Track }
 export type SerializedOfflineScrobble = { scrobble: SerializedScrobble; timestamp: number }
 export type SerializedScrobble = { artist: string; track: string; album: string | null; track_number: number | null; duration: number; album_artist: string | null }
 export type SerializedScrobbleResponse = { accepted: number; ignored: number }
-export type StreamAction = { Play: string } | "Pause" | "Resume" | { Seek: number } | { SetLoop: boolean } | { SetVolume: number } | "ToggleMute" | "Reset" | { SetOutputDevice: string | null } | "GetStatus"
-export type StreamStatus = { is_playing: boolean; position: number; duration: number; is_looping: boolean; path: string | null; volume: number; is_muted: boolean; output_device: string | null }
+export type StreamAction = { Play: string } | "Pause" | "Resume" | { Seek: number } | { SetLoop: boolean } | { SetVolume: number } | "ToggleMute" | "Reset" | { SetOutputDevice: string | null } | 
+/**
+ * Query-only: returns current state without changing anything. Since
+ * this round-trips through the same channel the audio thread's startup
+ * logic runs on before it starts servicing requests, the response is
+ * guaranteed to reflect e.g. a startup device fallback already applied
+ * on this thread — unlike a fire-and-forget event, which can fire before
+ * a listener has been registered.
+ */
+"GetStatus"
+export type StreamStatus = { is_playing: boolean; position: number; duration: number; is_looping: boolean; path: string | null; volume: number; is_muted: boolean; 
+/**
+ * The currently-active output device, or `None` for the system default.
+ * Authoritative: only ever set to the device that's actually in use.
+ * `#[serde(default)]` so playback state persisted before this field
+ * existed still deserializes instead of being discarded wholesale.
+ */
+output_device?: string | null }
 export type TagTypeArg = "id3v2.2" | "id3v2.3" | "id3v2.4"
 export type Track = { playcount: string }
 

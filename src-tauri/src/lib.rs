@@ -20,6 +20,7 @@ mod audio;
 mod cover_protocol;
 mod diesel_schema;
 mod error;
+mod file_provider;
 mod hooks;
 mod id3;
 mod lastfm;
@@ -34,6 +35,10 @@ pub type DbPool = Pool<ConnectionManager<SqliteConnection>>;
 #[tokio::main]
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 pub async fn run() {
+  // Before anything can touch a file: a stray read of a File Provider
+  // placeholder would otherwise download it in full.
+  file_provider::disable_dataless_materialization();
+
   #[cfg(debug_assertions)] // only enable instrumentation in development builds
   let devtools = tauri_plugin_devtools::init();
 
@@ -203,6 +208,7 @@ pub async fn run() {
     lastfm::get_lastfm_profile,
     lastfm::get_lastfm_play_count,
     id3::write_id3_frames,
+    file_provider::download_tracks,
   ]);
 
   #[cfg(debug_assertions)]

@@ -6,12 +6,17 @@ const props = defineProps<{
 const {
   hasNextTrack,
   hasPreviousTrack,
+  isAwaitingDownload,
   isShuffled,
   playbackStatus,
   playPauseCurrentTrack,
   skipTrack,
   toggleShuffle,
 } = usePlayback()
+
+// a track waiting on its download is on its way to playing, so the button
+// offers the same thing it would mid-playback: stop it from continuing
+const isPlaying = computed(() => isAwaitingDownload.value || !!playbackStatus.value?.is_playing)
 </script>
 
 <template>
@@ -44,9 +49,7 @@ const {
       @click="playPauseCurrentTrack()"
     >
       <Icon
-        :name="
-          playbackStatus?.is_playing ? 'tabler:player-pause-filled' : 'tabler:player-play-filled'
-        "
+        :name="isPlaying ? 'tabler:player-pause-filled' : 'tabler:player-play-filled'"
         class="text-background size-6!"
       />
     </LayoutPanelPlayerButton>

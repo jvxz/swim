@@ -11,6 +11,18 @@ const { addToPlaylist, playlists, removeFromPlaylist } = useUserPlaylists()
 const trackListInput = useTrackListInput()
 const { updatePlayCount } = usePlayCount()
 const { lastFmProfile, lastFmProfilePending } = useLastFm()
+const { downloadTracks, liveDownloadStatus } = useFileProvider()
+
+// already-downloading tracks are deliberately excluded, not just disabled —
+// re-issuing a download for one in flight does nothing useful
+const downloadable = computed(
+  () =>
+    entries?.filter((entry) => {
+      const status = liveDownloadStatus(entry)
+
+      return status === 'NotDownloaded' || status === 'DownloadFailed'
+    }) ?? [],
+)
 
 async function handleReveal() {
   if (!entries) return
@@ -78,6 +90,12 @@ async function handleViewContainingFolder() {
       @click="handleRemove"
     >
       Remove from playlist
+    </UContextMenuItem>
+    <UContextMenuItem
+      v-if="downloadable.length"
+      @click="() => downloadTracks(downloadable.map((entry) => entry.path))"
+    >
+      Download{{ downloadable.length > 1 ? ` ${downloadable.length} tracks` : '' }}
     </UContextMenuItem>
     <UContextMenuItem @click="handleReveal"> Reveal in file explorer </UContextMenuItem>
     <UContextMenuItem

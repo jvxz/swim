@@ -11,6 +11,7 @@ type CacheEntryKeysToOmit =
   | 'play_count'
   | 'date_added'
   | 'last_played'
+  | 'download_status'
 export type TrackListCacheEntry = Prettify<
   Omit<PlaylistEntry, CacheEntryKeysToOmit> | Omit<FolderEntry, CacheEntryKeysToOmit>
 >

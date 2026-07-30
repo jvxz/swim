@@ -228,6 +228,7 @@ onMounted(() => {
                   entry.data.tags,
                   entry.data.play_count,
                   entry.data.last_played,
+                  entry.data.download_status,
                   isUpdatingPlayCount(entry.data),
                 ]"
                 draggable="true"
@@ -280,6 +281,7 @@ onMounted(() => {
                 entry.tags,
                 entry.play_count,
                 entry.last_played,
+                entry.download_status,
                 isUpdatingPlayCount(entry),
               ]"
               draggable="true"
