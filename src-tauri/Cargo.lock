@@ -6855,6 +6855,8 @@ dependencies = [
  "last-fm-rs",
  "log",
  "md5 0.8.0",
+ "objc2",
+ "objc2-foundation",
  "rand 0.10.0",
  "serde",
  "serde_json",

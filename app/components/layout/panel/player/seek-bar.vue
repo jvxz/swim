@@ -11,7 +11,7 @@ withDefaults(
   },
 )
 
-const { playbackStatus, seekCurrentTrack } = usePlayback()
+const { hasPendingDownload, isAwaitingDownload, playbackStatus, seekCurrentTrack } = usePlayback()
 
 const isChangingPosition = shallowRef(false)
 const localPosition = shallowRef([playbackStatus.value?.position ?? 0])
@@ -35,8 +35,14 @@ function handlePointer(type: 'up' | 'down') {
   } else isChangingPosition.value = true
 }
 
-const computedDuration = computed(() => formatDuration(playbackStatus.value?.duration ?? 0, 's'))
-const computedPosition = computed(() => formatDuration(playbackStatus.value?.position ?? 0, 's'))
+// a placeholder's duration isn't known until the file is on disk, and the
+// reported position still belongs to the previous track — so show neither
+const computedDuration = computed(() =>
+  hasPendingDownload.value ? '-:--' : formatDuration(playbackStatus.value?.duration ?? 0, 's'),
+)
+const computedPosition = computed(() =>
+  hasPendingDownload.value ? '-:--' : formatDuration(playbackStatus.value?.position ?? 0, 's'),
+)
 </script>
 
 <template>
@@ -60,13 +66,34 @@ const computedPosition = computed(() => formatDuration(playbackStatus.value?.pos
       {{ computedPosition }} / {{ computedDuration }}
     </p>
     <div class="flex gap-4 w-full items-center">
+      <!-- width is reserved rather than fitted, so swapping a real timestamp
+           for the placeholder can't nudge the bar -->
       <p
         v-if="showDuration === 'both-sides'"
-        class="text-xs text-muted-foreground tabular-nums"
+        class="text-xs text-muted-foreground text-right min-w-[5ch] tabular-nums"
       >
         {{ computedPosition }}
       </p>
+      <!-- nothing to seek through until the file lands: the channel keeps its
+           geometry but carries the download instead of a playhead -->
+      <div
+        v-if="hasPendingDownload"
+        class="flex grow h-4 w-full relative"
+        role="progressbar"
+        :aria-label="isAwaitingDownload ? 'Downloading track' : 'Download paused'"
+      >
+        <div class="bg-muted h-2 w-full top-1/2 absolute overflow-hidden -translate-y-1/2">
+          <div
+            :class="
+              isAwaitingDownload
+                ? 'animate-seek-sweep bg-primary/40 h-full'
+                : 'bg-muted-foreground/15 h-full w-full'
+            "
+          />
+        </div>
+      </div>
       <SliderRoot
+        v-else
         v-model:model-value="localPosition"
         :max="playbackStatus?.duration ?? 0"
         class="flex grow h-4 w-full relative"
@@ -90,7 +117,7 @@ const computedPosition = computed(() => formatDuration(playbackStatus.value?.pos
       </SliderRoot>
       <p
         v-if="showDuration === 'both-sides'"
-        class="text-xs text-muted-foreground tabular-nums"
+        class="text-xs text-muted-foreground text-left min-w-[5ch] tabular-nums"
       >
         {{ computedDuration }}
       </p>

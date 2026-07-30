@@ -50,17 +50,22 @@ const [DefineMarquee, ReuseMarquee] = createReusableTemplate()
     draggable="true"
     @dragstart.prevent="handleDragStart"
   >
-    <ReuseMarquee>
-      <p
-        :title="currentTrack?.tags.TIT2 ?? currentTrack?.name"
-        class="font-medium truncate group-data-[position=center]:text-sm"
-        :class="{
-          'max-w-2xl': !$settings.layout.element.player.marqueeText,
-        }"
-      >
-        {{ currentTrack?.tags.TIT2 ?? currentTrack?.name }}
-      </p>
-    </ReuseMarquee>
+    <!-- the indicator sits outside the marquee so it stays put while the title
+         scrolls past it -->
+    <div class="flex gap-1.5 items-center">
+      <ReuseMarquee>
+        <p
+          :title="currentTrack?.tags.TIT2 ?? currentTrack?.name"
+          class="font-medium truncate group-data-[position=center]:text-sm"
+          :class="{
+            'max-w-2xl': !$settings.layout.element.player.marqueeText,
+          }"
+        >
+          {{ currentTrack?.tags.TIT2 ?? currentTrack?.name }}
+        </p>
+      </ReuseMarquee>
+      <DownloadIndicator :entry="currentTrack" />
+    </div>
     <ReuseMarquee>
       <p
         :title="currentTrack?.tags.TPE1"

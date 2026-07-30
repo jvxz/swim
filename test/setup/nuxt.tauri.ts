@@ -43,6 +43,7 @@ beforeAll(() => {
       if (cmd === 'get_track_data') {
         return {
           date_added: null,
+          download_status: 'Local',
           duration: 100,
           extension: 'mp3',
           last_played: null,

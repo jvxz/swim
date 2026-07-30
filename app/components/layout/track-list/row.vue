@@ -48,7 +48,15 @@ function getCellContent(entry: TrackListEntry, frame: Id3FrameId | undefined) {
       <!-- cover column -->
       <template v-if="col.key === 'APIC'">
         <div
-          v-if="!entry.valid || !entry.tags.APIC"
+          v-if="entry.download_status && entry.download_status !== 'Local'"
+          class="mx-auto justify-center"
+          :class="classes"
+          @dragstart="emits('textDragStart', $event)"
+        >
+          <DownloadIndicator :entry="entry" />
+        </div>
+        <div
+          v-else-if="!entry.valid || !entry.tags.APIC"
           class="mx-auto justify-center"
           :class="classes"
           @dragstart="emits('textDragStart', $event)"

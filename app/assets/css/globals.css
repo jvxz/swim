@@ -161,3 +161,29 @@ body[style*='padding-right'] {
   animation-name: slideUp;
   animation-duration: var(--duration);
 }
+
+@keyframes seekSweep {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(400%);
+  }
+}
+
+/* A downloading track has no position to report, and a seek bar frozen at zero
+   reads as broken. A band travelling through the same channel says "filling up"
+   without inventing a playhead. */
+.animate-seek-sweep {
+  width: 25%;
+  animation: seekSweep 1.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-seek-sweep {
+    width: 100%;
+    animation: none;
+    opacity: 0.4;
+  }
+}
