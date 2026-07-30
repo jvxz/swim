@@ -113,33 +113,7 @@ export function useLibrary() {
           .where('source_id', '=', folderPath)
           .execute()
 
-        const libraryTracksSources = await $db()
-          .selectFrom('library_tracks_source')
-          .where('source_id', 'is not', folderPath)
-          .where(
-            'track_id',
-            'in',
-            folderTracksSources.map((source) => source.track_id),
-          )
-          .selectAll()
-          .execute()
-
-        const tracksToDelete = folderTracksSources.filter(
-          (source) => !libraryTracksSources.some((s) => s.track_id === source.track_id),
-        )
-
-        const deletedTracks = await $db()
-          .deleteFrom('library_tracks')
-          .where(
-            'id',
-            'in',
-            tracksToDelete.map((source) => source.track_id),
-          )
-          .returning('path')
-          .execute()
-
-        // the tracks no longer have a date_added, so the cached file entries are stale
-        await refreshTrackData(deletedTracks.map((track) => track.path))
+        await pruneUnreferencedTracks(folderTracksSources.map((source) => source.track_id))
 
         await $db().deleteFrom('library_folders').where('path', '=', folderPath).execute()
 
@@ -150,6 +124,75 @@ export function useLibrary() {
       void 0,
       { immediate: false },
     )
+
+  /** Deletes any of the given track ids that no longer have a remaining `library_tracks_source` row. */
+  async function pruneUnreferencedTracks(candidateTrackIds: number[]) {
+    if (candidateTrackIds.length === 0) return
+
+    const stillReferenced = await $db()
+      .selectFrom('library_tracks_source')
+      .where('track_id', 'in', candidateTrackIds)
+      .select('track_id')
+      .execute()
+
+    const referencedIds = new Set(stillReferenced.map((source) => source.track_id))
+    const orphanIds = candidateTrackIds.filter((id) => !referencedIds.has(id))
+
+    if (orphanIds.length === 0) return
+
+    const deletedTracks = await $db()
+      .deleteFrom('library_tracks')
+      .where('id', 'in', orphanIds)
+      .returning('path')
+      .execute()
+
+    // the tracks no longer have a date_added, so the cached file entries are stale
+    await refreshTrackData(deletedTracks.map((track) => track.path))
+  }
+
+  /**
+   * Re-scans a folder already in the library at a new depth: tracks that fall out of scope
+   * are unlinked (and deleted if no other source references them), tracks newly in scope are
+   * added, and tracks that remain in scope are left untouched so their date_added/last_played
+   * survive the change.
+   */
+  async function setFolderScanDepth(folderPath: string, deep: boolean) {
+    await $db()
+      .updateTable('library_folders')
+      .set({ recursive: deep ? 1 : 0 })
+      .where('path', '=', folderPath)
+      .execute()
+
+    const currentTracks = await getFolderTracks(folderPath, deep)
+    const currentPaths = new Set(currentTracks.map((track) => track.path))
+
+    const linkedTracks = await $db()
+      .selectFrom('library_tracks_source')
+      .innerJoin('library_tracks', 'library_tracks.id', 'library_tracks_source.track_id')
+      .where('library_tracks_source.source_type', '=', 'folder')
+      .where('library_tracks_source.source_id', '=', folderPath)
+      .select(['library_tracks.id', 'library_tracks.path'])
+      .execute()
+
+    const staleTrackIds = linkedTracks
+      .filter((track) => !currentPaths.has(track.path))
+      .map((track) => track.id)
+
+    if (staleTrackIds.length > 0) {
+      await $db()
+        .deleteFrom('library_tracks_source')
+        .where('source_type', '=', 'folder')
+        .where('source_id', '=', folderPath)
+        .where('track_id', 'in', staleTrackIds)
+        .execute()
+
+      await pruneUnreferencedTracks(staleTrackIds)
+    }
+
+    await addTracksToLibrary(currentTracks, { id: folderPath, type: 'folder' })
+
+    refreshLibraryFolders()
+  }
 
   const useFolderInLibrary = (folderPath: string) =>
     useAsyncData(
@@ -274,6 +317,7 @@ export function useLibrary() {
     isRemovingFolderFromLibrary,
     markTrackPlayed,
     removeFolderFromLibrary,
+    setFolderScanDepth,
     useFolderInLibrary,
   }
 }

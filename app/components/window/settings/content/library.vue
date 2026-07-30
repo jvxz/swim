@@ -3,7 +3,8 @@ import { open as openFilePicker } from '@tauri-apps/plugin-dialog'
 import type { AcceptableValue } from 'reka-ui'
 
 const { copy } = useClipboard()
-const { addFolderToLibrary, getLibraryFolders, removeFolderFromLibrary } = useLibrary()
+const { addFolderToLibrary, getLibraryFolders, removeFolderFromLibrary, setFolderScanDepth } =
+  useLibrary()
 
 const { data: folders } = getLibraryFolders()
 
@@ -66,6 +67,12 @@ async function handleDrop(folderPaths: string[]) {
               </UContextMenuTrigger>
               <UContextMenuContent>
                 <UContextMenuItem @click="copy(folder.path)"> Copy path </UContextMenuItem>
+                <UContextMenuCheckboxItem
+                  :checked="!!folder.recursive"
+                  @update:checked="(checked) => setFolderScanDepth(folder.path, checked)"
+                >
+                  Scan subfolders
+                </UContextMenuCheckboxItem>
                 <UContextMenuItem @click="handleRemoveFolder(folder.path)">
                   Remove
                 </UContextMenuItem>
