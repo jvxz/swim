@@ -3,7 +3,11 @@ import { getCapabilities } from '../../../wdio.conf'
 const count = 50
 
 describe('tauri startup behavior', () => {
-  it(`successfully starts the app ${count} times`, async () => {
+  it(`successfully starts the app ${count} times`, async function () {
+    // 50 session reloads (each relaunching the app binary) take ~59-61s on CI,
+    // right against the global 60s mochaOpts.timeout - bump just this test.
+    this.timeout(180000)
+
     const capabilities = getCapabilities()
     // needed for reloadSession to work
     // @ts-expect-error - maxInstances is not a valid property in the capabilities type
