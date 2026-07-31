@@ -1,6 +1,7 @@
 export const TRACK_LIST_ITEM_HEIGHT = 34
 
 const defaultData: TrackListInput = {
+  deep: false,
   path: '',
   sortBy: 'TIT2',
   sortOrder: 'Asc',
@@ -76,7 +77,7 @@ export function useTrackList() {
 
     switch (input.type) {
       case 'folder': {
-        tracks = (await trackData.getFolderTracks(input.path)).map((entry) => ({
+        tracks = (await trackData.getFolderTracks(input.path, input.deep)).map((entry) => ({
           ...entry,
           is_playlist_track: false as const,
         }))

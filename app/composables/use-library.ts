@@ -1,9 +1,14 @@
 import { emit } from '@tauri-apps/api/event'
 import { LazyStore } from '@tauri-apps/plugin-store'
+import type { Selectable } from 'kysely'
 import { sql } from 'kysely'
+
+import type { LibraryTracks } from '~/types/db'
 
 const LIBRARY_FOLDERS_KEY = 'library-folders'
 const LIBRARY_FOLDERS_CHANGED_EVENT = 'library-folders-changed'
+// keeps each insert/IN-clause well under SQLite's ~32,766 bind-variable limit
+const LIBRARY_BATCH_SIZE = 500
 
 const metadataBackfillStore = new LazyStore('library-metadata-backfill.json')
 
@@ -107,33 +112,7 @@ export function useLibrary() {
           .where('source_id', '=', folderPath)
           .execute()
 
-        const libraryTracksSources = await $db()
-          .selectFrom('library_tracks_source')
-          .where('source_id', 'is not', folderPath)
-          .where(
-            'track_id',
-            'in',
-            folderTracksSources.map((source) => source.track_id),
-          )
-          .selectAll()
-          .execute()
-
-        const tracksToDelete = folderTracksSources.filter(
-          (source) => !libraryTracksSources.some((s) => s.track_id === source.track_id),
-        )
-
-        const deletedTracks = await $db()
-          .deleteFrom('library_tracks')
-          .where(
-            'id',
-            'in',
-            tracksToDelete.map((source) => source.track_id),
-          )
-          .returning('path')
-          .execute()
-
-        // the tracks no longer have a date_added, so the cached file entries are stale
-        await refreshTrackData(deletedTracks.map((track) => track.path))
+        await pruneUnreferencedTracks(folderTracksSources.map((source) => source.track_id))
 
         await $db().deleteFrom('library_folders').where('path', '=', folderPath).execute()
 
@@ -144,6 +123,40 @@ export function useLibrary() {
       void 0,
       { immediate: false },
     )
+
+  /** Deletes any of the given track ids that no longer have a remaining `library_tracks_source` row. */
+  async function pruneUnreferencedTracks(candidateTrackIds: number[]) {
+    if (candidateTrackIds.length === 0) return
+
+    const referencedIds = new Set<number>()
+    for (const batch of chunk(candidateTrackIds, LIBRARY_BATCH_SIZE)) {
+      const stillReferenced = await $db()
+        .selectFrom('library_tracks_source')
+        .where('track_id', 'in', batch)
+        .select('track_id')
+        .execute()
+
+      stillReferenced.forEach((source) => referencedIds.add(source.track_id))
+    }
+
+    const orphanIds = candidateTrackIds.filter((id) => !referencedIds.has(id))
+
+    if (orphanIds.length === 0) return
+
+    const deletedTracks: { path: string }[] = []
+    for (const batch of chunk(orphanIds, LIBRARY_BATCH_SIZE)) {
+      deletedTracks.push(
+        ...(await $db()
+          .deleteFrom('library_tracks')
+          .where('id', 'in', batch)
+          .returning('path')
+          .execute()),
+      )
+    }
+
+    // the tracks no longer have a date_added, so the cached file entries are stale
+    await refreshTrackData(deletedTracks.map((track) => track.path))
+  }
 
   const useFolderInLibrary = (folderPath: string) =>
     useAsyncData(
@@ -157,13 +170,13 @@ export function useLibrary() {
       { immediate: false },
     )
 
-  async function addTracksToLibrary(
+  async function addTrackBatch(
     tracks: FileEntry[],
     source: {
       type: 'folder' | 'playlist'
       id: string
     },
-  ) {
+  ): Promise<Selectable<LibraryTracks>[]> {
     await $db()
       .insertInto('library_tracks')
       .values(
@@ -204,6 +217,22 @@ export function useLibrary() {
       )
       .onConflict((conflict) => conflict.doNothing())
       .execute()
+
+    return existingLibraryTracks
+  }
+
+  async function addTracksToLibrary(
+    tracks: FileEntry[],
+    source: {
+      type: 'folder' | 'playlist'
+      id: string
+    },
+  ) {
+    const existingLibraryTracks: Selectable<LibraryTracks>[] = []
+
+    for (const batch of chunk(tracks, LIBRARY_BATCH_SIZE)) {
+      existingLibraryTracks.push(...(await addTrackBatch(batch, source)))
+    }
 
     // date_added lives on the library row, so the cached file entries are now stale
     await refreshTrackData(existingLibraryTracks.map((track) => track.path))
@@ -257,6 +286,12 @@ export function useLibrary() {
 
 function buildFolderInLibraryKey(folderPath: string) {
   return `${folderPath}-in-library`
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = []
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size))
+  return chunks
 }
 
 export function refreshLibraryFolders() {
