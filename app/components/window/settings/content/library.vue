@@ -3,7 +3,8 @@ import { open as openFilePicker } from '@tauri-apps/plugin-dialog'
 import type { AcceptableValue } from 'reka-ui'
 
 const { copy } = useClipboard()
-const { addFolderToLibrary, getLibraryFolders, removeFolderFromLibrary } = useLibrary()
+const { addFolderToLibrary, getLibraryFolders, removeFolderFromLibrary, setFolderRecursive } =
+  useLibrary()
 
 const { data: folders } = getLibraryFolders()
 
@@ -23,6 +24,10 @@ async function handleAddFolder() {
 
 async function handleDrop(folderPaths: string[]) {
   await addFolderToLibrary(0, folderPaths[0])
+}
+
+function handleSetRecursive(folderPath: string, recursive: boolean) {
+  setFolderRecursive(0, folderPath, recursive)
 }
 </script>
 
@@ -46,33 +51,44 @@ async function handleDrop(folderPaths: string[]) {
             type="single"
             class="h-32 overflow-y-auto space-y-0.5"
           >
-            <UContextMenu
+            <div
               v-for="folder in folders"
               :key="folder.path"
+              class="flex gap-2 items-center"
             >
-              <UContextMenuTrigger as-child>
-                <ToggleGroupItem
-                  :value="folder.path"
-                  as-child
-                >
-                  <button
-                    :title="folder.path"
-                    class="data-active:ghost-button-active text-left w-full select-none truncate"
+              <UCheckbox
+                :model-value="!!folder.recursive"
+                title="Include tracks in this folder's subfolders"
+                @update:model-value="handleSetRecursive(folder.path, $event === true)"
+              />
+              <UContextMenu>
+                <UContextMenuTrigger as-child>
+                  <ToggleGroupItem
+                    :value="folder.path"
+                    as-child
                   >
-                    {{ folder.path }}
-                  </button>
-                </ToggleGroupItem>
-              </UContextMenuTrigger>
-              <UContextMenuContent>
-                <UContextMenuItem @click="copy(folder.path)"> Copy path </UContextMenuItem>
-                <UContextMenuItem @click="handleRemoveFolder(folder.path)">
-                  Remove
-                </UContextMenuItem>
-              </UContextMenuContent>
-            </UContextMenu>
+                    <button
+                      :title="folder.path"
+                      class="data-active:ghost-button-active text-left flex-1 min-w-0 select-none truncate"
+                    >
+                      {{ folder.path }}
+                    </button>
+                  </ToggleGroupItem>
+                </UContextMenuTrigger>
+                <UContextMenuContent>
+                  <UContextMenuItem @click="copy(folder.path)"> Copy path </UContextMenuItem>
+                  <UContextMenuItem @click="handleRemoveFolder(folder.path)">
+                    Remove
+                  </UContextMenuItem>
+                </UContextMenuContent>
+              </UContextMenu>
+            </div>
           </ToggleGroupRoot>
         </UCard>
       </TauriDragoverProvider>
+      <p class="text-xs text-muted-foreground">
+        Tick a folder to also include the tracks in its subfolders.
+      </p>
       <div class="flex justify-between">
         <UButton
           variant="outline"
