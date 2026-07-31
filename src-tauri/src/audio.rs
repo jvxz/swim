@@ -346,29 +346,48 @@ pub fn spawn_audio_thread(
     None
   };
 
-  // load track if initial state has path
-  if let Some(path) = &state.path {
-    if std::path::Path::new(path).is_file() {
+  // load track if initial state has path. restoring is best-effort: a persisted
+  // path that no longer decodes (unsupported format, cloud file with no bytes
+  // yet) must not propagate out of here, or the thread dies before the event
+  // loop starts and every later command hits a dropped receiver. same caveat as
+  // the audio-manager fallback above — the webview may not have loaded yet, so
+  // correctness comes from `state` plus the frontend's `GetStatus` on mount,
+  // which is why `handle_action_error` clearing `state.path` matters
+  if let Some(path) = state.path.clone() {
+    if std::path::Path::new(&path).is_file() {
       static_sound_id += 1;
       pending_static_data = None;
-      let _ = loader_tx.send((static_sound_id, path.to_string()));
+      let _ = loader_tx.send((static_sound_id, path.clone()));
 
-      let new_sound_data = load_streaming_data(path.to_string())
-        .map_err(|e| Error::Audio(format!("failed to create streaming sound data: {}", e)))?;
-      let mut new_handle = audio_manager
-        .play(new_sound_data.with_settings(StreamingSoundSettings {
-          loop_region: if state.is_looping {
-            Some(Region::from(0.0..))
-          } else {
-            None
-          },
-          volume: Value::from(Decibels::from(state.volume)),
-          start_position: PlaybackPosition::Seconds(state.position),
-          ..Default::default()
-        }))
-        .map_err(|_| Error::Audio("failed to play sound via stream".to_string()))?;
-      new_handle.pause(TWEEN);
-      audio_handle = CurrentHandle::Streaming(new_handle);
+      match load_streaming_data(path) {
+        Ok(new_sound_data) => {
+          match audio_manager.play(new_sound_data.with_settings(StreamingSoundSettings {
+            loop_region: if state.is_looping {
+              Some(Region::from(0.0..))
+            } else {
+              None
+            },
+            volume: Value::from(Decibels::from(state.volume)),
+            start_position: PlaybackPosition::Seconds(state.position),
+            ..Default::default()
+          })) {
+            Ok(mut new_handle) => {
+              new_handle.pause(TWEEN);
+              audio_handle = CurrentHandle::Streaming(new_handle);
+            }
+            Err(_) => handle_action_error(
+              &app_handle,
+              &mut state,
+              Error::Audio("failed to play sound via stream".to_string()),
+            ),
+          }
+        }
+        Err(e) => handle_action_error(
+          &app_handle,
+          &mut state,
+          Error::Audio(format!("failed to create streaming sound data: {}", e)),
+        ),
+      }
     }
   }
 
