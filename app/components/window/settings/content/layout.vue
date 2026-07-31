@@ -19,13 +19,20 @@ const settings = useSettings()
       <WindowSettingsContentLayoutElements />
     </div>
     <USeparator />
-    <div class="shrink-0">
+    <div class="flex shrink-0 flex-col gap-2">
       <div class="flex gap-2 items-center">
         <UCheckbox
           id="allowResizing"
           v-model:model-value="settings.layout.allowResizing"
         />
         <ULabel for="allowResizing"> Allow resizing </ULabel>
+      </div>
+      <div class="flex gap-2 items-center">
+        <UCheckbox
+          id="showStatusBar"
+          v-model:model-value="settings.layout.showStatusBar"
+        />
+        <ULabel for="showStatusBar"> Show status bar </ULabel>
       </div>
     </div>
   </WindowSettingsContentTabLayout>

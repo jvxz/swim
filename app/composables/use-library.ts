@@ -9,6 +9,8 @@ const LIBRARY_FOLDERS_KEY = 'library-folders'
 const LIBRARY_FOLDERS_CHANGED_EVENT = 'library-folders-changed'
 // keeps each insert/IN-clause well under SQLite's ~32,766 bind-variable limit
 const LIBRARY_BATCH_SIZE = 500
+// small enough that the status bar's progress feels live, not chunky
+const SCAN_PROGRESS_BATCH_SIZE = 20
 
 const metadataBackfillStore = new LazyStore('library-metadata-backfill.json')
 
@@ -45,7 +47,7 @@ export async function backfillTrackMetadata() {
 }
 
 export function useLibrary() {
-  const { getFolderTracks, getTracksData, refreshTrackData } = useTrackData()
+  const { getTracksData, refreshTrackData } = useTrackData()
 
   async function getLibraryTracks() {
     await backfillTrackMetadata()
@@ -81,7 +83,31 @@ export function useLibrary() {
         })
         .execute()
 
-      const folderTracks = await getFolderTracks(folderPath)
+      const paths = await $invoke(commands.getFolderTrackPaths, folderPath, false)
+      const folderTracks: FileEntry[] = []
+      // unique per call (not just folderPath) so scanning the same folder twice
+      // concurrently can't have one call's completion clear the other's progress
+      const scanId = crypto.randomUUID()
+
+      try {
+        if (paths.length > 0) {
+          await reportScanProgress(scanId, { current: 0, label: folderPath, total: paths.length })
+
+          for (let i = 0; i < paths.length; i += SCAN_PROGRESS_BATCH_SIZE) {
+            const batch = paths.slice(i, i + SCAN_PROGRESS_BATCH_SIZE)
+            folderTracks.push(...(await getTracksData(batch)))
+            // count paths attempted, not entries returned - getTracksData silently drops
+            // paths it couldn't read, so counting only successes would never reach total
+            await reportScanProgress(scanId, {
+              current: Math.min(i + SCAN_PROGRESS_BATCH_SIZE, paths.length),
+              label: folderPath,
+              total: paths.length,
+            })
+          }
+        }
+      } finally {
+        await reportScanProgress(scanId, null)
+      }
 
       await addTracksToLibrary(folderTracks, {
         id: folderPath,

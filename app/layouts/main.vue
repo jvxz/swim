@@ -71,7 +71,7 @@ const visiblePanels = computed(() => {
         </template>
       </SplitterGroup>
       <LayoutBottomBar v-if="settings.layout.panel.bottom.elements.length" />
-      <!-- <LayoutStatusBar /> -->
+      <LayoutStatusBar v-if="settings.layout.showStatusBar" />
     </div>
   </NuxtLayout>
 </template>
