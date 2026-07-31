@@ -388,6 +388,15 @@ pub fn spawn_audio_thread(
           Error::Audio(format!("failed to create streaming sound data: {}", e)),
         ),
       }
+    } else {
+      // the persisted file has since been moved or deleted; clear it for the
+      // same reason as above, so `GetStatus` doesn't report a track that isn't
+      // there. matches the `StreamAction::Play` branch's wording
+      handle_action_error(
+        &app_handle,
+        &mut state,
+        Error::Audio("File does not exist".to_string()),
+      );
     }
   }
 
