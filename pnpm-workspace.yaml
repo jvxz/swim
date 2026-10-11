@@ -2,9 +2,9 @@ packages:
   - '.'
 
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@0.2.6
-  vitest: 4.1.10
-  vite-plus: 0.2.6
+  vite: npm:@voidzero-dev/vite-plus-core@0.3.3
+  vitest: 4.1.11
+  vite-plus: 0.3.3
 
 # Successor to bun's `trustedDependencies`. `vp migrate` writes these as
 # placeholders; every entry must be an explicit boolean or pnpm silently skips the
@@ -28,7 +28,7 @@ allowBuilds:
 overrides:
   vite: 'catalog:'
   vitest: 'catalog:'
-  vue: 3.6.0-rc.2
+  vue: 3.6.0-rc.10
 peerDependencyRules:
   allowAny:
     - vite
