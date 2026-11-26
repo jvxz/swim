@@ -57,7 +57,7 @@
     "dequal": "^2.0.3",
     "fuse.js": "^7.1.0",
     "kysely": "^0.28.11",
-    "kysely-dialect-tauri": "^1.2.1",
+    "kysely-dialect-tauri": "^2.0.1",
     "lru-cache": "^11.2.6",
     "nuxt": "^4.4.2",
     "nuxt-icons": "4.0.0",
